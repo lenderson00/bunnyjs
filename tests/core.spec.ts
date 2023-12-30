@@ -3,6 +3,16 @@ import axios from "axios";
 
 jest.mock("axios");
 
+class RequestError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+    Object.setPrototypeOf(this, RequestError.prototype);
+  }
+}
+
 class APIClient {
   private baseUrl: string;
   private accessKey: string;
@@ -33,32 +43,37 @@ class APIClient {
     const options = this.buildOptions(input);
 
     try {
-      const { data, status } = await axios.request({
+      const response = await axios.request({
         url,
         method,
         ...options,
       });
 
-      if (status >= 400) {
-        throw new Error(data);
+      if (response.status >= 400) {
+        const errorMessage =
+          response.data.title ?? response.data.Message ?? "Request failed";
+        const error = new RequestError(errorMessage, response.status);
+        throw error;
       }
 
       return {
         status: "success",
-        statusCode: status,
-        data,
+        statusCode: response.status,
+        data: response.data,
       };
-    } catch (error) {
+    } catch (error: any) {
+      const status = error.status ?? 400;
+      const errorMessage = error.message ?? "Request failed";
+
       return {
         status: "failure",
-        statusCode: (error as any).response?.status || 400,
+        statusCode: status,
         data: {
-          error,
+          error: errorMessage,
         },
       };
     }
   }
-
   private buildURL(endpoint: string) {
     return `${this.baseUrl}${endpoint}`;
   }
@@ -287,7 +302,9 @@ describe("CoreTests", () => {
     it("should return a error if axios throws", async () => {
       const sut = makeSut();
 
-      jest.spyOn(axios, "request").mockRejectedValueOnce(new Error());
+      jest
+        .spyOn(axios, "request")
+        .mockRejectedValueOnce(new Error("any_error"));
 
       const promise = sut.get("/any_endpoint");
 
@@ -295,7 +312,7 @@ describe("CoreTests", () => {
         status: "failure",
         statusCode: 400,
         data: {
-          error: new Error(),
+          error: "any_error",
         },
       });
     });
@@ -312,6 +329,22 @@ describe("CoreTests", () => {
           any_data: "any_data",
         },
       });
+    });
+
+    it("should return a Response with status failure if axios returns a status >= 400", async () => {
+      const sut = makeSut();
+
+      jest.spyOn(axios, "request").mockResolvedValueOnce({
+        status: 403,
+        data: {
+          any_data: "any_data",
+        },
+      });
+
+      const result = await sut.get("/any_endpoint");
+
+      expect(result.status).toEqual("failure");
+      expect(result.statusCode).toEqual(403);
     });
   });
 });
