@@ -62,6 +62,10 @@ export class APIClient {
     return this.makeRequest(endpoint, "DELETE", input);
   }
 
+  async upload(params: APIClient.UploadFileRequest) {
+    
+  }
+
   private async makeRequest(
     endpoint: string,
     method: APIClient.Methods,
@@ -147,6 +151,21 @@ export namespace APIClient {
     status: "success" | "failure";
     statusCode: number;
     data: any;
+  };
+
+  export type UploadFileRequest = {
+    file: File;
+    videoId: string;
+    libraryId: number;
+    metadata: {
+      filetype: string;
+      title: string;
+      collection?: string;
+      thumbnailTime?: number;
+    };
+    onError?: (error: any) => void;
+    onProgress?: (bytesUploaded: number, bytesTotal: number) => void;
+    onSuccess?: () => void;
   };
 
   export type Methods = "GET" | "POST" | "PUT" | "DELETE";
