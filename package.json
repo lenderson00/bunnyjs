@@ -5,9 +5,9 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "jest --passWithNoTests",
+    "test": "jest --passWithNoTests --no-cache --runInBand",
     "test:watch": "npm test -- --watch",
-    "test:coverage": "jest --findRelatedTests --coverage"
+    "test:coverage": "npm t -- --coverage"
   },
   "repository": {
     "type": "git",

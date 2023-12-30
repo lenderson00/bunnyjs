@@ -92,7 +92,6 @@ export class APIClient {
       onProgress: params.onProgress,
       onSuccess: params.onSuccess,
     });
-    
     uploadTUS.findPreviousUploads().then(function (previousUploads) {
       // Found previous uploads so we select the first one.
       if (previousUploads.length) {
