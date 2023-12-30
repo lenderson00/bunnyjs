@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "outDir": "dist",
+    "module": "commonjs",
+    "baseUrl": "./",
+    "paths": {
+      "@bunnyjs/*": ["src/*"],
+      "@bunnyjs": ["src/core.ts"],
+      "@test/*": ["test/*"]
+    },
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true
+  },
+  "include": ["src/**/*", "tests/**/*"]
+}
