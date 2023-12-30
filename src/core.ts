@@ -35,31 +35,31 @@ export class APIClient {
     }
   }
 
-  async get(
+  async get <T = any> (
     endpoint: string,
     input?: APIClient.Request
-  ): Promise<APIClient.Response> {
+  ): Promise<APIClient.Response <T>> {
     return this.makeRequest(endpoint, "GET", input);
   }
 
-  async post(
+  async post<T = any>(
     endpoint: string,
     input?: APIClient.Request
-  ): Promise<APIClient.Response> {
+  ): Promise<APIClient.Response<T>> {
     return this.makeRequest(endpoint, "POST", input);
   }
 
-  async put(
+  async put <T = any>(
     endpoint: string,
     input?: APIClient.Request
-  ): Promise<APIClient.Response> {
+  ): Promise<APIClient.Response<T>> {
     return this.makeRequest(endpoint, "PUT", input);
   }
 
-  async delete(
+  async delete<T = any>(
     endpoint: string,
     input?: APIClient.Request
-  ): Promise<APIClient.Response> {
+  ): Promise<APIClient.Response<T>> {
     return this.makeRequest(endpoint, "DELETE", input);
   }
 
@@ -107,7 +107,7 @@ export class APIClient {
     endpoint: string,
     method: APIClient.Methods,
     input?: APIClient.Request
-  ): Promise<APIClient.Response> {
+  ): Promise<APIClient.Response<any>> {
     const url = this.buildURL(endpoint);
 
     const commonOptions = {
@@ -211,7 +211,7 @@ export namespace APIClient {
     };
   };
 
-  export type Response<T = any> = successResponse<T> | failureResponse;
+  export type Response<T> = successResponse<T> | failureResponse;
 
   export type UploadFileRequest = {
     file: File | Blob | Pick<ReadableStreamDefaultReader<any>, "read">;
