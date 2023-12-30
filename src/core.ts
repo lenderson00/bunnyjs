@@ -1,5 +1,6 @@
 import { createHash } from "crypto";
 import axios from "axios";
+import { Upload } from "tus-js-client";
 
 import { RequestError } from "@bunnyjs/errors";
 
@@ -63,7 +64,44 @@ export class APIClient {
   }
 
   async upload(params: APIClient.UploadFileRequest) {
+    const expireTime = params.expireTime ?? 60 * 60 * 24 * 1000;
+    const signature = this.createSignature({
+      libraryId: params.libraryId,
+      videoId: params.videoId,
+      expireTime,
+    });
+
+    const uploadTUS = new Upload(params.file, {
+      endpoint: "https://video.bunnycdn.com/tusupload",
+      retryDelays: params.retryDelays ?? [
+        0, 3000, 5000, 10000, 20000, 60000, 60000,
+      ],
+      headers: {
+        AuthorizationSignature: signature,
+        AuthorizationExpire: `${expireTime}`,
+        VideoId: params.videoId,
+        LibraryId: `${params.libraryId}`,
+      },
+      metadata: {
+        filetype: params.metadata.filetype,
+        title: params.metadata.title,
+        collection: params.metadata.collection ?? "",
+        thumbnailTime: `${params.metadata.thumbnailTime ?? ""}`,
+      },
+      onError: params.onError,
+      onProgress: params.onProgress,
+      onSuccess: params.onSuccess,
+    });
     
+    uploadTUS.findPreviousUploads().then(function (previousUploads) {
+      // Found previous uploads so we select the first one.
+      if (previousUploads.length) {
+        uploadTUS.resumeFromPreviousUpload(previousUploads[0]);
+      }
+
+      // Start the upload
+      uploadTUS.start();
+    });
   }
 
   private async makeRequest(
@@ -123,8 +161,7 @@ export class APIClient {
   }
 
   createSignature(input: APIClient.CreateSignatureParams): string {
-    const timestamp = input.expireTime ?? 60 * 60 * 24 * 1000;
-    const date = new Date(new Date().getTime() + timestamp);
+    const date = new Date(new Date().getTime() + input.expireTime);
 
     const stringToSign = `${input.libraryId}${this.accessKey}${date.getTime()}${
       input.videoId
@@ -154,9 +191,11 @@ export namespace APIClient {
   };
 
   export type UploadFileRequest = {
-    file: File;
+    file: File | Blob | Pick<ReadableStreamDefaultReader<any>, "read">;
     videoId: string;
     libraryId: number;
+    expireTime?: number;
+    retryDelays?: number[];
     metadata: {
       filetype: string;
       title: string;
@@ -173,6 +212,6 @@ export namespace APIClient {
   export type CreateSignatureParams = {
     libraryId: number;
     videoId: string;
-    expireTime?: number;
+    expireTime: number;
   };
 }

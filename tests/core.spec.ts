@@ -259,6 +259,7 @@ describe("CoreTests", () => {
       const createSignatureParams: APIClient.CreateSignatureParams = {
         libraryId: 1,
         videoId: "any_file_name",
+        expireTime: 1000,
       };
 
       const sut = makeSut();
@@ -275,7 +276,11 @@ describe("CoreTests", () => {
 
       const createSignatureSpy = jest.spyOn(sut as any, "createSignature");
 
-      sut.createSignature({ libraryId: 1, videoId: "any_file_name" });
+      sut.createSignature({
+        libraryId: 1,
+        videoId: "any_file_name",
+        expireTime: 1000,
+      });
 
       const hash = createSignatureSpy.mock.results[0].value;
 
