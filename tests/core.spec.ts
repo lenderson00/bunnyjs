@@ -20,19 +20,19 @@ class APIClient {
     }
   }
 
-  get(endpoint: string, input?: APIClient.Request) {
+  async get(endpoint: string, input?: APIClient.Request): Promise<any> {
     return this.makeRequest(endpoint, "GET", input);
   }
 
-  private makeRequest(
+  private async makeRequest(
     endpoint: string,
     method: APIClient.Methods,
     input?: APIClient.Request
-  ) {
+  ): Promise<any> {
     const url = this.buildURL(endpoint);
     const options = this.buildOptions(input);
 
-    return axios.request({
+    return await axios.request({
       url,
       method,
       ...options,
@@ -128,7 +128,7 @@ describe("CoreTests", () => {
       jest.clearAllMocks();
     });
 
-    it("should return a error if no BASE_URL was provided", () => {
+    it("should return a error if no BASE_URL was provided", async () => {
       const apiParams: APIClient.Params = {
         baseUrl: "",
         accessKey: "any_key",
@@ -141,7 +141,7 @@ describe("CoreTests", () => {
       expect(createSut).toThrow();
     });
 
-    it("should return a error if no ACCESS_KEY was provided", () => {
+    it("should return a error if no ACCESS_KEY was provided", async () => {
       const apiParams: APIClient.Params = {
         baseUrl: "any_url",
         accessKey: "",
@@ -154,12 +154,12 @@ describe("CoreTests", () => {
       expect(createSut).toThrow();
     });
 
-    it("should call makeRequest with correct params", () => {
+    it("should call makeRequest with correct params", async () => {
       const sut = makeSut();
 
       const makeRequestSpy = jest.spyOn(sut as any, "makeRequest");
 
-      sut.get("/any_endpoint");
+      await sut.get("/any_endpoint");
 
       expect(makeRequestSpy).toHaveBeenCalledWith(
         "/any_endpoint",
@@ -168,44 +168,44 @@ describe("CoreTests", () => {
       );
     });
 
-    it("should call makeRequest only once per method", () => {
+    it("should call makeRequest only once per method", async () => {
       const sut = makeSut();
 
       const makeRequestSpy = jest.spyOn(sut as any, "makeRequest");
 
-      sut.get("/any_endpoint");
+      await sut.get("/any_endpoint");
 
       expect(makeRequestSpy).toHaveBeenCalledTimes(1);
     });
 
-    it("should call buildUrl with correct params", () => {
+    it("should call buildUrl with correct params", async () => {
       const sut = makeSut();
 
       const buildURLSpy = jest.spyOn(sut as any, "buildURL");
 
-      sut.get("/any_endpoint");
+      await sut.get("/any_endpoint");
 
       expect(buildURLSpy).toHaveBeenCalledWith("/any_endpoint");
     });
 
-    it("should buildUrl correct", () => {
+    it("should buildUrl correct", async () => {
       const sut = makeSut();
 
       const buildURLSpy = jest.spyOn(sut as any, "buildURL");
 
-      sut.get("/any_endpoint");
+      await sut.get("/any_endpoint");
 
       const urlBuiled = buildURLSpy.mock.results[0].value;
 
       expect(urlBuiled).toBe("any_url/any_endpoint");
     });
 
-    it("should buildOptions create a header with accessKey", () => {
+    it("should buildOptions create a header with accessKey", async () => {
       const sut = makeSut();
 
       const buildOptionsSpy = jest.spyOn(sut as any, "buildOptions");
 
-      sut.get("/any_endpoint");
+      await sut.get("/any_endpoint");
 
       const headers = buildOptionsSpy.mock.results[0].value;
 
@@ -218,22 +218,22 @@ describe("CoreTests", () => {
       expect(headers).toEqual(expectedHeaders);
     });
 
-    it("should call axios once per request", () => {
+    it("should call axios once per request", async () => {
       const sut = makeSut();
 
       const axiosSpy = jest.spyOn(axios, "request");
 
-      sut.get("/any_endpoint");
+      await sut.get("/any_endpoint");
 
       expect(axiosSpy).toHaveBeenCalledTimes(1);
     });
 
-    it("should call axios with correct params", () => { 
+    it("should call axios with correct params", async () => {
       const sut = makeSut();
 
       const axiosSpy = jest.spyOn(axios, "request");
 
-      sut.get("/any_endpoint");
+      await sut.get("/any_endpoint");
 
       const axiosParams = axiosSpy.mock.calls[0][0];
 
@@ -247,7 +247,7 @@ describe("CoreTests", () => {
       };
 
       expect(axiosParams).toEqual(expectedParams);
-    })
+    });
   });
 });
 
