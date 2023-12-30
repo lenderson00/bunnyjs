@@ -227,6 +227,27 @@ describe("CoreTests", () => {
 
       expect(axiosSpy).toHaveBeenCalledTimes(1);
     });
+
+    it("should call axios with correct params", () => { 
+      const sut = makeSut();
+
+      const axiosSpy = jest.spyOn(axios, "request");
+
+      sut.get("/any_endpoint");
+
+      const axiosParams = axiosSpy.mock.calls[0][0];
+
+      const expectedParams = {
+        url: "any_url/any_endpoint",
+        method: "GET",
+        body: undefined,
+        headers: {
+          AccessKey: "any_key",
+        },
+      };
+
+      expect(axiosParams).toEqual(expectedParams);
+    })
   });
 });
 
