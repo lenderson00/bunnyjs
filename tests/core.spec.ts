@@ -147,6 +147,21 @@ describe("CoreTests", () => {
       );
     });
 
+    it('should call makeRequest only once per method', () => {
+       const apiParams: APIClient.Params = {
+         baseUrl: "any_url",
+         accessKey: "any_key",
+       }
+
+        const sut = new APIClient(apiParams)
+
+        const makeRequestSpy = jest.spyOn(sut as any, "makeRequest")
+
+        sut.get("/any_endpoint")
+
+        expect(makeRequestSpy).toHaveBeenCalledTimes(1)
+    })
+
     it("should call buildUrl with correct params", () => {
         const apiParams: APIClient.Params = {
           baseUrl: "any_url",
