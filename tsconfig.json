@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "outDir": "dist",
+    "module": "commonjs",
+    "baseUrl": "./",
+    "paths": {
+      "@buunyjs/*": ["src/*"],
+      "@buunyjs": ["src/index.ts"]
+    },
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true
+  },
+  "include": ["src/**/*"]
+}
