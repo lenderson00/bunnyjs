@@ -27,10 +27,15 @@ class APIClient {
     input?: APIClient.Request
   ) {
     const url = this.buildURL(endpoint);
+    
   }
 
   private buildURL(endpoint: string) {
-    //return `${this.baseUrl}${endpoint}`;
+    return `${this.baseUrl}${endpoint}`;
+  }
+
+  buildHeaders(input?: APIClient.Request) {
+  
   }
 }
 
@@ -129,12 +134,7 @@ describe("CoreTests", () => {
     });
 
     it("should call makeRequest with correct params", () => {
-      const apiParams: APIClient.Params = {
-        baseUrl: "any_url",
-        accessKey: "any_key",
-      };
-
-      const sut = new APIClient(apiParams);
+      const sut = makeSut();
 
       const makeRequestSpy = jest.spyOn(sut as any, "makeRequest");
 
@@ -147,34 +147,45 @@ describe("CoreTests", () => {
       );
     });
 
-    it('should call makeRequest only once per method', () => {
-       const apiParams: APIClient.Params = {
-         baseUrl: "any_url",
-         accessKey: "any_key",
-       }
+    it("should call makeRequest only once per method", () => {
+      const sut = makeSut();
 
-        const sut = new APIClient(apiParams)
+      const makeRequestSpy = jest.spyOn(sut as any, "makeRequest");
 
-        const makeRequestSpy = jest.spyOn(sut as any, "makeRequest")
+      sut.get("/any_endpoint");
 
-        sut.get("/any_endpoint")
-
-        expect(makeRequestSpy).toHaveBeenCalledTimes(1)
-    })
+      expect(makeRequestSpy).toHaveBeenCalledTimes(1);
+    });
 
     it("should call buildUrl with correct params", () => {
-        const apiParams: APIClient.Params = {
-          baseUrl: "any_url",
-          accessKey: "any_key",
-        }
+      const sut = makeSut();
 
-        const sut = new APIClient(apiParams)
+      const buildURLSpy = jest.spyOn(sut as any, "buildURL");
 
-        const buildURLSpy = jest.spyOn(sut as any, "buildURL")
+      sut.get("/any_endpoint");
 
-        sut.get("/any_endpoint")
+      expect(buildURLSpy).toHaveBeenCalledWith("/any_endpoint");
+    });
 
-        expect(buildURLSpy).toHaveBeenCalledWith("/any_endpoint")
-    })
+    it("should buildUrl correct", () => {
+      const sut = makeSut();
+
+      const buildURLSpy = jest.spyOn(sut as any, "buildURL");
+
+      sut.get("/any_endpoint");
+
+      const urlBuiled = buildURLSpy.mock.results[0].value;
+
+      expect(urlBuiled).toBe("any_url/any_endpoint");
+    });
   });
 });
+
+const makeSut = (): APIClient => {
+  const apiParams: APIClient.Params = {
+    baseUrl: "any_url",
+    accessKey: "any_key",
+  };
+
+  return new APIClient(apiParams);
+};
