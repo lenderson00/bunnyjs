@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import axios from "axios";
 import { Upload } from "tus-js-client";
 
-import { RequestError } from "@bunnyjs/errors";
+import { RequestError } from "../src/errors";
 
 export const readEnv = (envName: string): string | undefined => {
   if (typeof process === "undefined" || typeof process.env === "undefined") {
@@ -18,9 +18,10 @@ export const readEnv = (envName: string): string | undefined => {
   return env;
 };
 
+
 export class APIClient {
-  private baseUrl: string;
-  private accessKey: string;
+  private baseUrl?: string;
+  private accessKey?: string;
 
   constructor(params: APIClient.Params) {
     this.baseUrl = params.baseUrl;
@@ -109,20 +110,49 @@ export class APIClient {
     input?: APIClient.Request
   ): Promise<APIClient.Response> {
     const url = this.buildURL(endpoint);
-    const options = this.buildOptions(input);
+
+    const commonOptions = {
+      headers: {
+        ...input?.headers,
+        AccessKey: this.accessKey,
+      },
+    };
+  
+    let axiosConfig = {};
+  
+    // Configurações específicas para GET e DELETE (query parameters)
+    if (method === "GET" || method === "DELETE") {
+      axiosConfig = {
+        ...commonOptions,
+        params: input?.data,
+      };
+    }
+  
+    // Configurações específicas para POST e PUT (body)
+    if (method === "POST" || method === "PUT") {
+      axiosConfig = {
+        ...commonOptions,
+        data: input?.data,
+      };
+    }
 
     try {
       const response = await axios.request({
         url,
         method,
-        ...options,
+        ...axiosConfig,
       });
 
       if (response.status >= 400) {
         const errorMessage =
           response.data.title ?? response.data.Message ?? "Request failed";
-        const error = new RequestError(errorMessage, response.status);
-        throw error;
+        return {
+          status: "failure",
+          statusCode: response.status,
+          data: {
+            error: errorMessage,
+          },
+        }
       }
 
       return {
@@ -131,32 +161,18 @@ export class APIClient {
         data: response.data,
       };
     } catch (error: any) {
-      const status = error.status ?? 400;
-      const errorMessage = error.message ?? "Request failed";
-
+      
       return {
         status: "failure",
-        statusCode: status,
+        statusCode: 500,
         data: {
-          error: errorMessage,
+          error: "A error occurred while processing the request",
         },
       };
     }
   }
   private buildURL(endpoint: string) {
     return `${this.baseUrl}${endpoint}`;
-  }
-
-  private buildOptions(input?: APIClient.Request) {
-    const options = {
-      body: input?.body,
-      headers: {
-        ...input?.headers,
-        AccessKey: this.accessKey,
-      },
-    };
-
-    return options;
   }
 
   createSignature(input: APIClient.CreateSignatureParams): string {
@@ -174,19 +190,19 @@ export class APIClient {
 
 export namespace APIClient {
   export type Params = {
-    baseUrl: string;
-    accessKey: string;
+    baseUrl?: string;
+    accessKey?: string;
   };
 
   export type Request = {
-    body?: any;
+    data?: any;
     headers?: any;
   };
 
-  export type Response = {
+  export type Response<T = any> = {
     status: "success" | "failure";
     statusCode: number;
-    data: any;
+    data: T;
   };
 
   export type UploadFileRequest = {

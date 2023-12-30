@@ -142,24 +142,6 @@ describe("CoreTests", () => {
       expect(urlBuiled).toBe("any_url/any_endpoint");
     });
 
-    it("should buildOptions create a header with accessKey", async () => {
-      const sut = makeSut();
-
-      const buildOptionsSpy = jest.spyOn(sut as any, "buildOptions");
-
-      await sut.get("/any_endpoint");
-
-      const headers = buildOptionsSpy.mock.results[0].value;
-
-      const expectedHeaders = {
-        headers: {
-          AccessKey: "any_key",
-        },
-      };
-
-      expect(headers).toEqual(expectedHeaders);
-    });
-
     it("should call axios once per request", async () => {
       const sut = makeSut();
 
@@ -202,9 +184,9 @@ describe("CoreTests", () => {
 
       await expect(promise).resolves.toEqual({
         status: "failure",
-        statusCode: 400,
+        statusCode: 500,
         data: {
-          error: "any_error",
+          error: "A error occurred while processing the request",
         },
       });
     });
