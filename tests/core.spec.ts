@@ -1,5 +1,21 @@
 import { readEnv } from "@bunnyjs/core";
 
+type APIClientParams = {
+  baseUrl: string;
+};
+
+class APIClient {
+  private baseUrl: string;
+
+  constructor(params: APIClientParams) {
+    this.baseUrl = params.baseUrl;
+
+    if (!this.baseUrl) {
+      throw new Error("No BASE_URL was provided");
+    }
+  }
+}
+
 describe("CoreTests", () => {
   describe("readEnv", () => {
     const originalProcess = process.env;
@@ -50,6 +66,20 @@ describe("CoreTests", () => {
       const sut = readEnv(envName);
 
       expect(sut).toBe(envValue);
-    })
+    });
+  });
+
+  describe("APIClient", () => {
+    it("should return a error if no BASE_URL was provided", () => {
+      const apiParams = {
+        baseUrl: "",
+      };
+
+      const createSut = () => {
+        return new APIClient(apiParams);
+      };
+
+      expect(createSut).toThrow();
+    });
   });
 });
