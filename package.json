@@ -1,0 +1,22 @@
+{
+  "name": "bunnyjs",
+  "version": "0.0.1",
+  "description": "A simple Bunny Client for javascript",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lenderson00/bunnyjs.git"
+  },
+  "keywords": [
+    "Bunny"
+  ],
+  "author": "Lenderson Macedo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lenderson00/bunnyjs/issues"
+  },
+  "homepage": "https://github.com/lenderson00/bunnyjs#readme"
+}
