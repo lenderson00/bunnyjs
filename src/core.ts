@@ -18,7 +18,6 @@ export const readEnv = (envName: string): string | undefined => {
   return env;
 };
 
-
 export class APIClient {
   private baseUrl?: string;
   private accessKey?: string;
@@ -117,9 +116,9 @@ export class APIClient {
         AccessKey: this.accessKey,
       },
     };
-  
+
     let axiosConfig = {};
-  
+
     // Configurações específicas para GET e DELETE (query parameters)
     if (method === "GET" || method === "DELETE") {
       axiosConfig = {
@@ -127,7 +126,7 @@ export class APIClient {
         params: input?.data,
       };
     }
-  
+
     // Configurações específicas para POST e PUT (body)
     if (method === "POST" || method === "PUT") {
       axiosConfig = {
@@ -152,7 +151,7 @@ export class APIClient {
           data: {
             error: errorMessage,
           },
-        }
+        };
       }
 
       return {
@@ -161,7 +160,6 @@ export class APIClient {
         data: response.data,
       };
     } catch (error: any) {
-      
       return {
         status: "failure",
         statusCode: 500,
