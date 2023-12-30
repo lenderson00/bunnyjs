@@ -25,7 +25,13 @@ class APIClient {
     endpoint: string,
     method: APIClient.Methods,
     input?: APIClient.Request
-  ) {}
+  ) {
+    const url = this.buildURL(endpoint);
+  }
+
+  private buildURL(endpoint: string) {
+    //return `${this.baseUrl}${endpoint}`;
+  }
 }
 
 namespace APIClient {
@@ -140,5 +146,20 @@ describe("CoreTests", () => {
         undefined
       );
     });
+
+    it("should call buildUrl with correct params", () => {
+        const apiParams: APIClient.Params = {
+          baseUrl: "any_url",
+          accessKey: "any_key",
+        }
+
+        const sut = new APIClient(apiParams)
+
+        const buildURLSpy = jest.spyOn(sut as any, "buildURL")
+
+        sut.get("/any_endpoint")
+
+        expect(buildURLSpy).toHaveBeenCalledWith("/any_endpoint")
+    })
   });
 });
