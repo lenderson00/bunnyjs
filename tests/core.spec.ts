@@ -23,7 +23,7 @@ class APIClient {
 
   private makeRequest(
     endpoint: string,
-    method: string,
+    method: APIClient.Methods,
     input?: APIClient.Request
   ) {}
 }
@@ -38,6 +38,8 @@ namespace APIClient {
     body?: any;
     headers?: any;
   };
+
+  export type Methods = "GET" | "POST" | "PUT" | "DELETE";
 }
 
 describe("CoreTests", () => {
