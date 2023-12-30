@@ -7,7 +7,7 @@
     "build": "tsc",
     "test": "jest --passWithNoTests",
     "test:watch": "npm test -- --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --findRelatedTests --coverage"
   },
   "repository": {
     "type": "git",
