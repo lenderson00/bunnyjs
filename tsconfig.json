@@ -5,12 +5,13 @@
     "module": "commonjs",
     "baseUrl": "./",
     "paths": {
-      "@buunyjs/*": ["src/*"],
-      "@buunyjs": ["src/index.ts"]
+      "@bunnyjs/*": ["src/*"],
+      "@bunnyjs": ["src/core.ts"],
+      "@test/*": ["test/*"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "tests/**/*"]
 }
