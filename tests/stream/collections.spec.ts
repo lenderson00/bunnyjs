@@ -1,8 +1,6 @@
 import { mock, mockClear } from "jest-mock-extended";
 import { APIClient, APIClientGet } from "@bunnyjs/core";
-import { CollectionList } from "@bunnyjs/@types/bunny";
-
-
+import { Collection, CollectionList } from "@bunnyjs/@types/bunny";
 
 class BNCollection {
   constructor(private clientGet: APIClientGet) {}
@@ -11,6 +9,7 @@ class BNCollection {
     params: BNCollection.GetCollectionListParams
   ): Promise<APIClient.Response<CollectionList>> {
     const { libraryId, ...data } = params;
+
     const endpoint = `/library/${libraryId}/collections`;
 
     const input = {
@@ -22,15 +21,36 @@ class BNCollection {
 
     return this.clientGet.get<CollectionList>(endpoint, input);
   }
+
+  async get(
+    params: BNCollection.GetCollectionParams
+  ): Promise<APIClient.Response<Collection>> {
+    const { libraryId, collectionId } = params;
+
+    const endpoint = `/library/${libraryId}/collections/${collectionId}`;
+
+    const input = {
+      headers: {
+        accept: "application/json",
+      },
+    };
+
+    return this.clientGet.get<Collection>(endpoint, input);
+  }
 }
 
 namespace BNCollection {
   export type GetCollectionListParams = {
-    libraryId: string;
+    libraryId: number;
     page?: number;
     itemsPerPage?: number;
     search?: string;
     orderBy?: string;
+  };
+
+  export type GetCollectionParams = {
+    libraryId: number;
+    collectionId: string;
   };
 }
 
@@ -49,14 +69,14 @@ describe("Collections Stream", () => {
 
   it("should call Client.get with corrects params", async () => {
     const params: BNCollection.GetCollectionListParams = {
-      libraryId: "123",
+      libraryId: 523,
       orderBy: "date",
     };
     // Act
     await sut.getList(params);
 
     // Assert
-    expect(clientGet.get).toHaveBeenCalledWith("/library/123/collections", {
+    expect(clientGet.get).toHaveBeenCalledWith("/library/523/collections", {
       headers: {
         accept: "application/json",
       },
@@ -69,7 +89,7 @@ describe("Collections Stream", () => {
 
   it("should return a list of collections", async () => {
     const params: BNCollection.GetCollectionListParams = {
-      libraryId: "123",
+      libraryId: 523,
     };
     const response: APIClient.Response<CollectionList> = {
       status: "success",
@@ -100,4 +120,20 @@ describe("Collections Stream", () => {
     expect(result).toEqual(response);
   });
 
+  it("should return a single collection", async () => {
+    const params: BNCollection.GetCollectionParams = {
+      libraryId: 123,
+      collectionId: "456",
+    };
+
+    sut.get(params);
+
+    expect(clientGet.get).toHaveBeenCalledWith("/library/123/collections/456", {
+      headers: {
+        accept: "application/json",
+      },
+    });
+
+    expect(clientGet.get).toHaveBeenCalledTimes(1);
+  });
 });
