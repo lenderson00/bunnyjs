@@ -18,7 +18,14 @@ export const readEnv = (envName: string): string | undefined => {
   return env;
 };
 
-export class APIClient {
+export interface APIClientGet {
+  get: <T>(
+    endpoint: string,
+    input?: APIClient.Request
+  ) => Promise<APIClient.Response<T>>;
+}
+
+export class APIClient implements APIClientGet {
   private baseUrl?: string;
   private accessKey?: string;
 

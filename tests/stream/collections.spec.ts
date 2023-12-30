@@ -1,18 +1,14 @@
 import { mock, mockClear } from "jest-mock-extended";
-import { APIClient } from "@bunnyjs/core";
+import { APIClient, APIClientGet } from "@bunnyjs/core";
+import { CollectionList } from "@bunnyjs/@types/bunny";
 
-interface APIClientGet {
-  get: <T> (
-    endpoint: string,
-    input?: APIClient.Request
-  ) => Promise<APIClient.Response<T>>;
-}
+
 
 class BNCollection {
   constructor(private clientGet: APIClientGet) {}
 
   async getList(
-    params: GetCollectionListParams
+    params: BNCollection.GetCollectionListParams
   ): Promise<APIClient.Response<CollectionList>> {
     const { libraryId, ...data } = params;
     const endpoint = `/library/${libraryId}/collections`;
@@ -28,29 +24,15 @@ class BNCollection {
   }
 }
 
-type GetCollectionListParams = {
-  libraryId: string;
-  page?: number;
-  itemsPerPage?: number;
-  search?: string;
-  orderBy?: string;
-};
-
-type Collection = {
-  videoLibraryId: number;
-  guid: string;
-  name: string;
-  videoCount: number;
-  totalSize: number;
-  previewVideoIds: string;
-};
-
-type CollectionList = {
-  totalItems: number;
-  currentPage: number;
-  itemsPerPage: number;
-  items: Collection[];
-};
+namespace BNCollection {
+  export type GetCollectionListParams = {
+    libraryId: string;
+    page?: number;
+    itemsPerPage?: number;
+    search?: string;
+    orderBy?: string;
+  };
+}
 
 describe("Collections Stream", () => {
   let clientGet: APIClientGet;
@@ -66,7 +48,7 @@ describe("Collections Stream", () => {
   });
 
   it("should call Client.get with corrects params", async () => {
-    const params: GetCollectionListParams = {
+    const params: BNCollection.GetCollectionListParams = {
       libraryId: "123",
       orderBy: "date",
     };
@@ -86,10 +68,10 @@ describe("Collections Stream", () => {
   });
 
   it("should return a list of collections", async () => {
-    const params: GetCollectionListParams = {
+    const params: BNCollection.GetCollectionListParams = {
       libraryId: "123",
     };
-    const response: APIClient.Response<CollectionList> = {  
+    const response: APIClient.Response<CollectionList> = {
       status: "success",
       statusCode: 200,
       data: {
@@ -109,12 +91,13 @@ describe("Collections Stream", () => {
       },
     };
 
-    (clientGet.get as jest.Mock).mockResolvedValue({ ...response  })
+    (clientGet.get as jest.Mock).mockResolvedValue({ ...response });
 
     // Act
     const result = await sut.getList(params);
 
     // Assert
     expect(result).toEqual(response);
-  })
+  });
+
 });
