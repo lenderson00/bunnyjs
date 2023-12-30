@@ -240,6 +240,21 @@ describe("CoreTests", () => {
       expect(result.status).toEqual("failure");
       expect(result.statusCode).toEqual(403);
     });
+
+    it("should have all http methods", async () => {
+
+      const sut = makeSut();
+
+      const methods = ["get", "post", "put", "delete"];
+
+      methods.forEach(async (method) => {
+        const methodSpy = jest.spyOn(sut as any, method);
+
+        await (sut as any)[method]("/any_endpoint");
+
+        expect(methodSpy).toHaveBeenCalledTimes(1);
+      });
+    })
   });
 });
 

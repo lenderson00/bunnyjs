@@ -32,8 +32,32 @@ export class APIClient {
     }
   }
 
-  async get(endpoint: string, input?: APIClient.Request): Promise<any> {
+  async get(
+    endpoint: string,
+    input?: APIClient.Request
+  ): Promise<APIClient.Response> {
     return this.makeRequest(endpoint, "GET", input);
+  }
+
+  async post(
+    endpoint: string,
+    input?: APIClient.Request
+  ): Promise<APIClient.Response> {
+    return this.makeRequest(endpoint, "POST", input);
+  }
+
+  async put(
+    endpoint: string,
+    input?: APIClient.Request
+  ): Promise<APIClient.Response> {
+    return this.makeRequest(endpoint, "PUT", input);
+  }
+
+  async delete(
+    endpoint: string,
+    input?: APIClient.Request
+  ): Promise<APIClient.Response> {
+    return this.makeRequest(endpoint, "DELETE", input);
   }
 
   private async makeRequest(
