@@ -1,4 +1,7 @@
 import { readEnv } from "@bunnyjs/core";
+import axios from "axios";
+
+jest.mock("axios");
 
 class APIClient {
   private baseUrl: string;
@@ -28,6 +31,12 @@ class APIClient {
   ) {
     const url = this.buildURL(endpoint);
     const options = this.buildOptions(input);
+
+    return axios.request({
+      url,
+      method,
+      ...options,
+    });
   }
 
   private buildURL(endpoint: string) {
@@ -40,8 +49,8 @@ class APIClient {
       headers: {
         ...input?.headers,
         AccessKey: this.accessKey,
-      }
-    }
+      },
+    };
 
     return options;
   }
@@ -115,6 +124,10 @@ describe("CoreTests", () => {
   });
 
   describe("APIClient", () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
     it("should return a error if no BASE_URL was provided", () => {
       const apiParams: APIClient.Params = {
         baseUrl: "",
@@ -199,10 +212,20 @@ describe("CoreTests", () => {
       const expectedHeaders = {
         headers: {
           AccessKey: "any_key",
-        }
+        },
       };
 
       expect(headers).toEqual(expectedHeaders);
+    });
+
+    it("should call axios once per request", () => {
+      const sut = makeSut();
+
+      const axiosSpy = jest.spyOn(axios, "request");
+
+      sut.get("/any_endpoint");
+
+      expect(axiosSpy).toHaveBeenCalledTimes(1);
     });
   });
 });
