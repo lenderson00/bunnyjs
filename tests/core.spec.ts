@@ -28,15 +28,35 @@ class APIClient {
     endpoint: string,
     method: APIClient.Methods,
     input?: APIClient.Request
-  ): Promise<any> {
+  ): Promise<APIClient.Response> {
     const url = this.buildURL(endpoint);
     const options = this.buildOptions(input);
 
-    return await axios.request({
-      url,
-      method,
-      ...options,
-    });
+    try {
+      const { data, status } = await axios.request({
+        url,
+        method,
+        ...options,
+      });
+
+      if (status >= 400) {
+        throw new Error(data);
+      }
+
+      return {
+        status: "success",
+        statusCode: status,
+        data,
+      };
+    } catch (error) {
+      return {
+        status: "failure",
+        statusCode: (error as any).response?.status || 400,
+        data: {
+          error,
+        },
+      };
+    }
   }
 
   private buildURL(endpoint: string) {
@@ -65,6 +85,12 @@ namespace APIClient {
   export type Request = {
     body?: any;
     headers?: any;
+  };
+
+  export type Response = {
+    status: "success" | "failure";
+    statusCode: number;
+    data: any;
   };
 
   export type Methods = "GET" | "POST" | "PUT" | "DELETE";
@@ -124,8 +150,17 @@ describe("CoreTests", () => {
   });
 
   describe("APIClient", () => {
+    const axiosResponse = {
+      status: 200,
+      data: {
+        any_data: "any_data",
+      },
+    };
+
     beforeEach(() => {
       jest.clearAllMocks();
+
+      jest.spyOn(axios, "request").mockResolvedValue(axiosResponse);
     });
 
     it("should return a error if no BASE_URL was provided", async () => {
@@ -250,15 +285,34 @@ describe("CoreTests", () => {
     });
 
     it("should return a error if axios throws", async () => {
-
       const sut = makeSut();
 
       jest.spyOn(axios, "request").mockRejectedValueOnce(new Error());
 
       const promise = sut.get("/any_endpoint");
 
-      await expect(promise).rejects.toThrow();
-    })
+      await expect(promise).resolves.toEqual({
+        status: "failure",
+        statusCode: 400,
+        data: {
+          error: new Error(),
+        },
+      });
+    });
+
+    it("should return a Response if axios returns", async () => {
+      const sut = makeSut();
+
+      const result = await sut.get("/any_endpoint");
+
+      expect(result).toEqual({
+        status: "success",
+        statusCode: 200,
+        data: {
+          any_data: "any_data",
+        },
+      });
+    });
   });
 });
 
