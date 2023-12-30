@@ -248,6 +248,17 @@ describe("CoreTests", () => {
 
       expect(axiosParams).toEqual(expectedParams);
     });
+
+    it("should return a error if axios throws", async () => {
+
+      const sut = makeSut();
+
+      jest.spyOn(axios, "request").mockRejectedValueOnce(new Error());
+
+      const promise = sut.get("/any_endpoint");
+
+      await expect(promise).rejects.toThrow();
+    })
   });
 });
 
