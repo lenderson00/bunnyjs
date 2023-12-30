@@ -18,5 +18,9 @@
   "bugs": {
     "url": "https://github.com/lenderson00/bunnyjs/issues"
   },
-  "homepage": "https://github.com/lenderson00/bunnyjs#readme"
+  "homepage": "https://github.com/lenderson00/bunnyjs#readme",
+  "devDependencies": {
+    "@commitlint/cli": "^18.4.3",
+    "@commitlint/config-conventional": "^18.4.3"
+  }
 }
