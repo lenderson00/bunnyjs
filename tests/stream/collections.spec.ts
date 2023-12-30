@@ -1,9 +1,9 @@
 import { mock, mockClear } from "jest-mock-extended";
 import { APIClient, APIClientGet } from "@bunnyjs/core";
-import { Collection, CollectionList } from "@bunnyjs/@types/bunny";
+import { Collection, CollectionList, DefaultResponse } from "@bunnyjs/@types/bunny";
 
 class BNCollection {
-  constructor(private clientGet: APIClientGet) {}
+  constructor(private clientGet: APIClientGet, private clientDelete: DeleteClient) {}
 
   async getList(
     params: BNCollection.GetCollectionListParams
@@ -37,6 +37,22 @@ class BNCollection {
 
     return this.clientGet.get<Collection>(endpoint, input);
   }
+
+  async delete(
+    params: BNCollection.GetCollectionParams
+  ): Promise<APIClient.Response<DefaultResponse>> {
+    const { libraryId, collectionId } = params;
+
+    const endpoint = `/library/${libraryId}/collections/${collectionId}`;
+
+    const input = {
+      headers: {
+        accept: "application/json",
+      },
+    };
+
+    return this.clientDelete.delete<DefaultResponse>(endpoint, input);
+  }
 }
 
 namespace BNCollection {
@@ -52,15 +68,30 @@ namespace BNCollection {
     libraryId: number;
     collectionId: string;
   };
+
+  export type DeleteCollectionParams = {
+    libraryId: number;
+    collectionId: string;
+  }
 }
+
+interface DeleteClient {
+    delete: <T>(
+        endpoint: string,
+        input?: APIClient.Request
+    ) => Promise<APIClient.Response<T>>;
+}
+
 
 describe("Collections Stream", () => {
   let clientGet: APIClientGet;
+  let clientDelete: DeleteClient;
   let sut: BNCollection;
 
   beforeEach(() => {
     clientGet = mock();
-    sut = new BNCollection(clientGet);
+    clientDelete = mock();
+    sut = new BNCollection(clientGet, clientDelete);
   });
 
   afterEach(() => {
@@ -136,4 +167,21 @@ describe("Collections Stream", () => {
 
     expect(clientGet.get).toHaveBeenCalledTimes(1);
   });
+
+  it("should delete a collection", async () => {
+    const params: BNCollection.DeleteCollectionParams = {
+      libraryId: 123,
+      collectionId: "456",
+    };
+
+    sut.delete(params);
+    
+    expect(clientDelete.delete).toHaveBeenCalledWith("/library/123/collections/456", {
+      headers: {
+        accept: "application/json",
+      },
+    });
+
+    expect(clientDelete.delete).toHaveBeenCalledTimes(1); 
+  })
 });
