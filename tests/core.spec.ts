@@ -27,15 +27,23 @@ class APIClient {
     input?: APIClient.Request
   ) {
     const url = this.buildURL(endpoint);
-    
+    const options = this.buildOptions(input);
   }
 
   private buildURL(endpoint: string) {
     return `${this.baseUrl}${endpoint}`;
   }
 
-  buildHeaders(input?: APIClient.Request) {
-  
+  private buildOptions(input?: APIClient.Request) {
+    const options = {
+      body: input?.body,
+      headers: {
+        ...input?.headers,
+        AccessKey: this.accessKey,
+      }
+    }
+
+    return options;
   }
 }
 
@@ -177,6 +185,24 @@ describe("CoreTests", () => {
       const urlBuiled = buildURLSpy.mock.results[0].value;
 
       expect(urlBuiled).toBe("any_url/any_endpoint");
+    });
+
+    it("should buildOptions create a header with accessKey", () => {
+      const sut = makeSut();
+
+      const buildOptionsSpy = jest.spyOn(sut as any, "buildOptions");
+
+      sut.get("/any_endpoint");
+
+      const headers = buildOptionsSpy.mock.results[0].value;
+
+      const expectedHeaders = {
+        headers: {
+          AccessKey: "any_key",
+        }
+      };
+
+      expect(headers).toEqual(expectedHeaders);
     });
   });
 });
