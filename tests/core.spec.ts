@@ -1,15 +1,10 @@
 import { readEnv } from "@bunnyjs/core";
 
-type APIClientParams = {
-  baseUrl: string;
-  accessKey: string;
-};
-
 class APIClient {
   private baseUrl: string;
   private accessKey: string;
 
-  constructor(params: APIClientParams) {
+  constructor(params: APIClient.Params) {
     this.baseUrl = params.baseUrl;
     this.accessKey = params.accessKey;
 
@@ -21,6 +16,28 @@ class APIClient {
       throw new Error("No ACCESS_KEY was provided");
     }
   }
+
+  get(endpoint: string, input?: APIClient.Request) {
+    return this.makeRequest(endpoint, "GET", input);
+  }
+
+  private makeRequest(
+    endpoint: string,
+    method: string,
+    input?: APIClient.Request
+  ) {}
+}
+
+namespace APIClient {
+  export type Params = {
+    baseUrl: string;
+    accessKey: string;
+  };
+
+  export type Request = {
+    body?: any;
+    headers?: any;
+  };
 }
 
 describe("CoreTests", () => {
@@ -78,7 +95,7 @@ describe("CoreTests", () => {
 
   describe("APIClient", () => {
     it("should return a error if no BASE_URL was provided", () => {
-      const apiParams: APIClientParams = {
+      const apiParams: APIClient.Params = {
         baseUrl: "",
         accessKey: "any_key",
       };
@@ -91,7 +108,7 @@ describe("CoreTests", () => {
     });
 
     it("should return a error if no ACCESS_KEY was provided", () => {
-      const apiParams: APIClientParams = {
+      const apiParams: APIClient.Params = {
         baseUrl: "any_url",
         accessKey: "",
       };
@@ -101,6 +118,25 @@ describe("CoreTests", () => {
       };
 
       expect(createSut).toThrow();
+    });
+
+    it("should call makeRequest with correct params", () => {
+      const apiParams: APIClient.Params = {
+        baseUrl: "any_url",
+        accessKey: "any_key",
+      };
+
+      const sut = new APIClient(apiParams);
+
+      const makeRequestSpy = jest.spyOn(sut as any, "makeRequest");
+
+      sut.get("/any_endpoint");
+
+      expect(makeRequestSpy).toHaveBeenCalledWith(
+        "/any_endpoint",
+        "GET",
+        undefined
+      );
     });
   });
 });
