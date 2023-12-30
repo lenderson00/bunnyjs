@@ -256,6 +256,24 @@ describe("CoreTests", () => {
       });
     })
   });
+
+  describe("APIClient - upload Methods", () => {
+    it("should call SHA256 with corrects params", async () => {
+        const createSignatureParams: APIClient.CreateSignatureParams = {
+          libraryId: 1,
+          videoId: "any_file_name",
+        }
+
+        const sut = makeSut();
+
+        const createSignatureSpy = jest.spyOn(sut as any, "createSignature");
+
+        sut.createSignature(createSignatureParams);
+
+        expect(createSignatureSpy).toHaveBeenCalledWith(createSignatureParams);
+    })
+  
+  })
 });
 
 const makeSut = (): APIClient => {

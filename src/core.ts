@@ -115,6 +115,10 @@ export class APIClient {
 
     return options;
   }
+
+  createSignature(input: APIClient.CreateSignatureParams): string {
+    return `libraryId=${input.libraryId}&videoId=${input.videoId}&timestamp=${input.timestamp}&accessKey=${this.accessKey}`;
+  }
 }
 
 export namespace APIClient {
@@ -135,4 +139,10 @@ export namespace APIClient {
   };
 
   export type Methods = "GET" | "POST" | "PUT" | "DELETE";
+
+  export type CreateSignatureParams = {
+    libraryId: number;
+    videoId: string;
+    timestamp?: number;
+  };
 }
