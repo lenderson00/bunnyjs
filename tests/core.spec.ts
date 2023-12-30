@@ -3,8 +3,6 @@ import axios from "axios";
 
 jest.mock("axios");
 
-
-
 describe("CoreTests", () => {
   describe("readEnv", () => {
     const originalProcess = process.env;
@@ -242,7 +240,6 @@ describe("CoreTests", () => {
     });
 
     it("should have all http methods", async () => {
-
       const sut = makeSut();
 
       const methods = ["get", "post", "put", "delete"];
@@ -254,27 +251,44 @@ describe("CoreTests", () => {
 
         expect(methodSpy).toHaveBeenCalledTimes(1);
       });
-    })
+    });
   });
 
   describe("APIClient - upload Methods", () => {
-    it("should call SHA256 with corrects params", async () => {
-        const createSignatureParams: APIClient.CreateSignatureParams = {
-          libraryId: 1,
-          videoId: "any_file_name",
-        }
+    it("should call createSignature with corrects params", async () => {
+      const createSignatureParams: APIClient.CreateSignatureParams = {
+        libraryId: 1,
+        videoId: "any_file_name",
+      };
 
-        const sut = makeSut();
+      const sut = makeSut();
 
-        const createSignatureSpy = jest.spyOn(sut as any, "createSignature");
+      const createSignatureSpy = jest.spyOn(sut as any, "createSignature");
 
-        sut.createSignature(createSignatureParams);
+      sut.createSignature(createSignatureParams);
 
-        expect(createSignatureSpy).toHaveBeenCalledWith(createSignatureParams);
-    })
-  
-  })
+      expect(createSignatureSpy).toHaveBeenCalledWith(createSignatureParams);
+    });
+
+    it("should create a hash ", async () => {
+      const sut = makeSut();
+
+      const createSignatureSpy = jest.spyOn(sut as any, "createSignature");
+
+      sut.createSignature({ libraryId: 1, videoId: "any_file_name" });
+
+      const hash = createSignatureSpy.mock.results[0].value;
+
+      expect(verifySignature(hash)).toBeTruthy();
+    });
+  });
 });
+
+const verifySignature = (hash: string) => {
+  const regex = /^[a-f0-9]{64}$/gi;
+
+  return regex.test(hash);
+};
 
 const makeSut = (): APIClient => {
   const apiParams: APIClient.Params = {

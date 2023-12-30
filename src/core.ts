@@ -1,4 +1,6 @@
+import { createHash } from "crypto";
 import axios from "axios";
+
 import { RequestError } from "@bunnyjs/errors";
 
 export const readEnv = (envName: string): string | undefined => {
@@ -117,7 +119,16 @@ export class APIClient {
   }
 
   createSignature(input: APIClient.CreateSignatureParams): string {
-    return `libraryId=${input.libraryId}&videoId=${input.videoId}&timestamp=${input.timestamp}&accessKey=${this.accessKey}`;
+    const timestamp = input.expireTime ?? 60 * 60 * 24 * 1000;
+    const date = new Date(new Date().getTime() + timestamp);
+
+    const stringToSign = `${input.libraryId}${this.accessKey}${date.getTime()}${
+      input.videoId
+    }`;
+
+    const signature = createHash("sha256").update(stringToSign).digest("hex");
+
+    return signature;
   }
 }
 
@@ -143,6 +154,6 @@ export namespace APIClient {
   export type CreateSignatureParams = {
     libraryId: number;
     videoId: string;
-    timestamp?: number;
+    expireTime?: number;
   };
 }
