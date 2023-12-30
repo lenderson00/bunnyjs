@@ -2,16 +2,23 @@ import { readEnv } from "@bunnyjs/core";
 
 type APIClientParams = {
   baseUrl: string;
+  accessKey: string;
 };
 
 class APIClient {
   private baseUrl: string;
+  private accessKey: string;
 
   constructor(params: APIClientParams) {
     this.baseUrl = params.baseUrl;
+    this.accessKey = params.accessKey;
 
     if (!this.baseUrl) {
       throw new Error("No BASE_URL was provided");
+    }
+
+    if (!this.accessKey) {
+      throw new Error("No ACCESS_KEY was provided");
     }
   }
 }
@@ -71,8 +78,22 @@ describe("CoreTests", () => {
 
   describe("APIClient", () => {
     it("should return a error if no BASE_URL was provided", () => {
-      const apiParams = {
+      const apiParams: APIClientParams = {
         baseUrl: "",
+        accessKey: "any_key",
+      };
+
+      const createSut = () => {
+        return new APIClient(apiParams);
+      };
+
+      expect(createSut).toThrow();
+    });
+
+    it("should return a error if no ACCESS_KEY was provided", () => {
+      const apiParams: APIClientParams = {
+        baseUrl: "any_url",
+        accessKey: "",
       };
 
       const createSut = () => {
