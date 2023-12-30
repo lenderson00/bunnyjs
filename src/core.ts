@@ -197,11 +197,21 @@ export namespace APIClient {
     headers?: any;
   };
 
-  export type Response<T = any> = {
-    status: "success" | "failure";
+  type successResponse<T> = {
+    status: "success";
     statusCode: number;
     data: T;
   };
+
+  type failureResponse = {
+    status: "failure";
+    statusCode: number;
+    data: {
+      error: string;
+    };
+  };
+
+  export type Response<T = any> = successResponse<T> | failureResponse;
 
   export type UploadFileRequest = {
     file: File | Blob | Pick<ReadableStreamDefaultReader<any>, "read">;

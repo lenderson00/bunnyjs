@@ -1,4 +1,4 @@
-import { mock } from "jest-mock-extended";
+import { mock, mockClear} from "jest-mock-extended";
 import { APIClient } from "@bunnyjs/core";
 
 interface APIClientGet {
@@ -9,7 +9,7 @@ interface APIClientGet {
 class BNCollection {
   constructor(private clientGet: APIClientGet) {}
 
-  async getList(params: GetCollectionListParams): Promise<void> {
+  async getList(params: GetCollectionListParams): Promise<APIClient.Response<any>> {
     const { libraryId, ...data } = params;
     const endpoint = `/library/${libraryId}/collections`;
 
@@ -20,7 +20,7 @@ class BNCollection {
         data
     }
 
-    this.clientGet.get(endpoint, input);
+    return this.clientGet.get(endpoint, input);
   }
 }
 
@@ -40,6 +40,10 @@ describe("Collections Stream", () => {
     clientGet = mock<APIClientGet>();
     sut = new BNCollection(clientGet);
   }) 
+
+  afterEach(() => {
+    mockClear(clientGet)
+  })
 
   it("should call Client.get with corrects params", async () => {
     const params: GetCollectionListParams = {
@@ -61,4 +65,6 @@ describe("Collections Stream", () => {
     expect(clientGet.get).toHaveBeenCalledTimes(1);
 
   });
+
+
 });
