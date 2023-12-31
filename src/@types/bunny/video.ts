@@ -70,3 +70,10 @@ export type VideoStatistics = {
   countryWatchTime: ChartData;
   engagementScore: number;
 };
+
+export type PaginatedVideoLibraryResponse = {
+  totalItems: number;
+  currentPage: number;
+  itemsPerPage: number;
+  items: VideoLibraryItem[];
+};

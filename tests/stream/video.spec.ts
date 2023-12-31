@@ -1,5 +1,6 @@
 import {
   Heatmap,
+  PaginatedVideoLibraryResponse,
   VideoLibraryItem,
   VideoStatistics,
 } from "@bunnyjs/@types/bunny";
@@ -9,7 +10,7 @@ import { mock, mockClear } from "jest-mock-extended";
 class BNVideoStream {
   constructor(private client: APIClientGet) {}
 
-  public async getList(
+  public get(
     params: BNVideoStream.GetVideoParams
   ): Promise<APIClient.Response<VideoLibraryItem>> {
     const endpoint = `/library/${params.libraryId}/videos/${params.videoId}`;
@@ -50,6 +51,23 @@ class BNVideoStream {
 
     return this.client.get<VideoStatistics>(endpoint, options);
   }
+
+  public getList(
+    params: BNVideoStream.GetVideoListParams
+  ): Promise<APIClient.Response<PaginatedVideoLibraryResponse>> {
+    const { libraryId, ...data } = params;
+
+    const endpoint = `/library/${params.libraryId}/videos`;
+
+    const options = {
+      headers: {
+        accept: "application/json",
+      },
+      data,
+    };
+
+    return this.client.get<PaginatedVideoLibraryResponse>(endpoint, options);
+  }
 }
 
 namespace BNVideoStream {
@@ -69,6 +87,15 @@ namespace BNVideoStream {
     dateFrom?: Date;
     dateTo?: Date;
     hourly?: boolean;
+  };
+
+  export type GetVideoListParams = {
+    libraryId: number;
+    page?: number;
+    itemsPerPage?: number;
+    search?: string;
+    orderBy?: string;
+    collection?: string;
   };
 }
 
@@ -94,7 +121,7 @@ describe("Video Stream", () => {
       videoId: "456",
     };
 
-    sut.getList(params);
+    sut.get(params);
 
     expect(client.get).toHaveBeenCalledWith("/library/123/videos/456", {
       headers: {
@@ -133,6 +160,30 @@ describe("Video Stream", () => {
     expect(client.get).toHaveBeenCalledWith("/library/123/statistics", {
       headers: {
         accept: "application/json",
+      },
+    });
+
+    expect(client.get).toHaveBeenCalledTimes(1);
+  });
+
+  it("should list all videos in a given library", async () => {
+    const params: BNVideoStream.GetVideoListParams = {
+      libraryId: 123,
+      page: 1,
+      itemsPerPage: 10,
+      search: "foo",
+    };
+
+    sut.getList(params);
+
+    expect(client.get).toHaveBeenCalledWith("/library/123/videos", {
+      headers: {
+        accept: "application/json",
+      },
+      data: {
+        page: 1,
+        itemsPerPage: 10,
+        search: "foo",
       },
     });
 
