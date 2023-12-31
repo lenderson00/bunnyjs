@@ -141,6 +141,26 @@ class BNVideoStream {
 
     return this.client.post<DefaultResponse>(endpoint, options);
   }
+
+  public fetch(
+    params: BNVideoStream.FetchVideoParams
+  ): Promise<APIClient.Response<DefaultResponse>> {
+    const { libraryId, videoId, collectionId, thumbnailTime, ...data } = params;
+
+    const endpoint = `/library/${libraryId}/videos/fetch?collectionId=${collectionId}&thumbnailTime=${
+      thumbnailTime || ""
+    }`;
+
+    const options = {
+      headers: {
+        accept: "application/json",
+        "content-type": "application/*+json",
+      },
+      data,
+    };
+
+    return this.client.post<DefaultResponse>(endpoint, options);
+  }
 }
 
 namespace BNVideoStream {
@@ -198,6 +218,16 @@ namespace BNVideoStream {
     libraryId: number;
     videoId: string;
     thumbnailUrl: string;
+  };
+
+  export type FetchVideoParams = {
+    libraryId: number;
+    videoId: string;
+    collectionId?: string;
+    thumbnailTime?: number;
+    url: string;
+    headers?: Record<string, string>;
+    title?: string;
   };
 }
 
@@ -382,21 +412,59 @@ describe("Video Stream", () => {
 
   it("should set thumbnails for a video", async () => {
     const params: BNVideoStream.SetThumbnailVideoParams = {
-        libraryId: 123,
-        videoId: "video12345",
-        thumbnailUrl: "https://example.com/thumbnail.png",
-    }
+      libraryId: 123,
+      videoId: "video12345",
+      thumbnailUrl: "https://example.com/thumbnail.png",
+    };
 
     sut.setThumbnail(params);
 
-    expect(client.post).toHaveBeenCalledWith("/library/123/videos/video12345/thumbnail", {
-      headers: {
-        accept: "application/json",
-      },
-      data: {
-        thumbnailUrl: "https://example.com/thumbnail.png",
-      },
-    });
+    expect(client.post).toHaveBeenCalledWith(
+      "/library/123/videos/video12345/thumbnail",
+      {
+        headers: {
+          accept: "application/json",
+        },
+        data: {
+          thumbnailUrl: "https://example.com/thumbnail.png",
+        },
+      }
+    );
 
-    })
+    expect(client.post).toHaveBeenCalledTimes(1);
+  });
+
+  it("should fecth a video from url", async () => {
+    const params: BNVideoStream.FetchVideoParams = {
+      libraryId: 123,
+      videoId: "456",
+      collectionId: "231231",
+      url: "https://example.com/video.mp4",
+      title: "Example Video Title",
+      headers: {
+        "x-foo": "bar",
+      },
+    };
+
+    sut.fetch(params);
+
+    expect(client.post).toHaveBeenCalledWith(
+      "/library/123/videos/fetch?collectionId=231231&thumbnailTime=",
+      {
+        headers: {
+          accept: "application/json",
+          "content-type": "application/*+json",
+        },
+        data: {
+          url: "https://example.com/video.mp4",
+          title: "Example Video Title",
+          headers: {
+            "x-foo": "bar",
+          },
+        },
+      }
+    );
+
+    expect(client.post).toHaveBeenCalledTimes(1);
+  });
 });
