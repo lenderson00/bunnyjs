@@ -48,7 +48,7 @@ export interface PutClient {
 }
 
 export interface UploadClient {
-  upload: (params: APIClient.UploadFileRequest) => void;
+  upload: (params: APIClient.UploadFileRequest) => Promise<void>;
 }
 
 type APIClientCompose = GetClient &

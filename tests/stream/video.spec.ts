@@ -8,11 +8,11 @@ import {
   VideoLibraryItem,
   VideoStatistics,
 } from "@bunnyjs/@types/bunny";
-import { APIClient, DeleteClient, GetClient, PostClient } from "@bunnyjs/core";
+import { APIClient, DeleteClient, GetClient, PostClient, UploadClient } from "@bunnyjs/core";
 import { mock, mockClear } from "jest-mock-extended";
 
 class BNVideoStream {
-  constructor(private client: GetClient & PostClient & DeleteClient) {}
+  constructor(private client: GetClient & PostClient & DeleteClient & UploadClient) {}
 
   public get(
     params: BNVideoStream.GetVideoParams
@@ -214,6 +214,13 @@ class BNVideoStream {
 
     return this.client.delete<DefaultResponse>(endpoint, options);
   }
+
+  public async upload(
+    params: BNVideoStream.UploadVideoParams
+  ): Promise<void> {
+   
+    await this.client.upload(params);
+  }
 }
 
 namespace BNVideoStream {
@@ -303,10 +310,27 @@ namespace BNVideoStream {
     videoId: string;
     srclang: string;
   };
+
+  export type UploadVideoParams = {
+    libraryId: number;
+    videoId: string;
+    file: File | Blob | Pick<ReadableStreamDefaultReader<any>, "read">;
+    metadata: {
+      filetype: string;
+      title: string;
+      collection?: string;
+      thumbnailTime?: number;
+    };
+    expireTime?: number;
+    retryDelays?: number[];
+    onError?: (error: any) => void;
+    onProgress?: (bytesUploaded: number, bytesTotal: number) => void;
+    onSuccess?: () => void;
+  };
 }
 
 describe("Video Stream", () => {
-  let client: GetClient & PostClient & DeleteClient;
+  let client: GetClient & PostClient & DeleteClient & UploadClient;
   let sut: BNVideoStream;
 
   beforeAll(() => {
@@ -608,4 +632,24 @@ describe("Video Stream", () => {
       }
     );
   });
+
+  it("should upload a video", async () => {
+    const params: BNVideoStream.UploadVideoParams = {
+      libraryId: 123,
+      videoId: "456",
+      file: new File([""], "video.mp4"),
+      metadata: {
+        filetype: "video/mp4",
+        title: "Example Video Title",
+        collection: "231231",
+        thumbnailTime: 30,
+      },
+    };
+
+    sut.upload(params);
+
+    expect(client.upload).toHaveBeenCalledWith(params);
+    expect(client.upload).toHaveBeenCalledTimes(1);
+
+  })
 });
