@@ -3,6 +3,7 @@ import axios from "axios";
 import { Upload } from "tus-js-client";
 
 import { RequestError } from "../src/errors";
+import { BunnyValidationErrorResponse } from "./@types/bunny";
 
 export const readEnv = (envName: string): string | undefined => {
   if (typeof process === "undefined" || typeof process.env === "undefined") {
@@ -42,10 +43,10 @@ export class APIClient implements APIClientGet {
     }
   }
 
-  async get <T = any> (
+  async get<T = any>(
     endpoint: string,
     input?: APIClient.Request
-  ): Promise<APIClient.Response <T>> {
+  ): Promise<APIClient.Response<T>> {
     return this.makeRequest(endpoint, "GET", input);
   }
 
@@ -56,7 +57,7 @@ export class APIClient implements APIClientGet {
     return this.makeRequest(endpoint, "POST", input);
   }
 
-  async put <T = any>(
+  async put<T = any>(
     endpoint: string,
     input?: APIClient.Request
   ): Promise<APIClient.Response<T>> {
@@ -213,9 +214,11 @@ export namespace APIClient {
   type failureResponse = {
     status: "failure";
     statusCode: number;
-    data: {
-      error: string;
-    };
+    data:
+      | BunnyValidationErrorResponse
+      | {
+          error: string;
+        };
   };
 
   export type Response<T> = successResponse<T> | failureResponse;
