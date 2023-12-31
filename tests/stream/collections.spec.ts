@@ -74,7 +74,28 @@ class BNCollection {
 
     return this.client.post<Collection>(endpoint, input);
   }
+
+  async update(
+    params: BNCollection.UpdateCollectionParams
+  ): Promise<APIClient.Response<DefaultResponse>> {
+    const { libraryId, collectionId, name } = params;
+
+    const endpoint = `/library/${libraryId}/collections/${collectionId}`;
+
+    const input = {
+      headers: {
+        accept: "application/json",
+        "content-type": "application/*+json",
+      },
+        data: {
+            name,
+        },
+    };
+
+    return this.client.post<DefaultResponse>(endpoint, input);
+  }
 }
+
 
 namespace BNCollection {
   export type GetCollectionListParams = {
@@ -97,6 +118,12 @@ namespace BNCollection {
 
   export type CreateCollectionParams = {
     libraryId: number;
+  };
+
+  export type UpdateCollectionParams = {
+    libraryId: number;
+    collectionId: string;
+    name: string;
   };
 }
 
@@ -223,9 +250,31 @@ describe("Collections Stream", () => {
 
     expect(client.post).toHaveBeenCalledWith("/library/123/collections", {
       headers: {
-        accept: 'application/json',
-        'content-type': 'application/*+json',
+        accept: "application/json",
+        "content-type": "application/*+json",
       },
+    });
+
+    expect(client.post).toHaveBeenCalledTimes(1);
+  });
+
+  it("should update the Name of a collection", async () => {
+    const params: BNCollection.UpdateCollectionParams = {
+      libraryId: 123,
+      collectionId: "456",
+      name: "New Name",
+    };
+
+    sut.update(params);
+
+    expect(client.post).toHaveBeenCalledWith("/library/123/collections/456", {
+      headers: {
+        accept: "application/json",
+        "content-type": "application/*+json",
+      },
+      data: {
+        name: "New Name",
+      }
     });
 
     expect(client.post).toHaveBeenCalledTimes(1);
