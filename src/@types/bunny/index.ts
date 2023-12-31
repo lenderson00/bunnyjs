@@ -1,4 +1,5 @@
 export * from "./collection";
+export * from "./video";
 
 export type DefaultResponse = {
   success: boolean;
