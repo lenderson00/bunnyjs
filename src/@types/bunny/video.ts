@@ -56,3 +56,8 @@ export type VideoLibraryItem = {
   metaTags: MetaTag[];
   transcodingMessages: TranscodingMessage[];
 };
+
+
+export type Heatmap = {
+  heatmap: Record<string, number>;
+};
