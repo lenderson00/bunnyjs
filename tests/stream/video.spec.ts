@@ -161,6 +161,27 @@ class BNVideoStream {
 
     return this.client.post<DefaultResponse>(endpoint, options);
   }
+
+  public addCaption(
+    params: BNVideoStream.AddCaptionParams
+  ): Promise<APIClient.Response<DefaultResponse>> {
+    const { libraryId, videoId, ...data } = params;
+    const endpoint = `/library/${libraryId}/videos/${videoId}/captions/${data.caption.srclang}`;
+
+    const options = {
+      headers: {
+        accept: "application/json",
+        "content-type": "application/*+json",
+      },
+      data: {
+        srclang: data.caption.srclang,
+        label: data.caption.label,
+        captionFile: data.caption.captionFile,
+      },
+    };
+
+    return this.client.post<DefaultResponse>(endpoint, options);
+  }
 }
 
 namespace BNVideoStream {
@@ -228,6 +249,16 @@ namespace BNVideoStream {
     url: string;
     headers?: Record<string, string>;
     title?: string;
+  };
+
+  export type AddCaptionParams = {
+    libraryId: number;
+    videoId: string;
+    caption: {
+      srclang: string;
+      label: string;
+      captionFile: string;
+    };
   };
 }
 
@@ -461,6 +492,37 @@ describe("Video Stream", () => {
           headers: {
             "x-foo": "bar",
           },
+        },
+      }
+    );
+
+    expect(client.post).toHaveBeenCalledTimes(1);
+  });
+
+  it("should add caption for a given video", async () => {
+    const params: BNVideoStream.AddCaptionParams = {
+      libraryId: 123,
+      videoId: "456",
+      caption: {
+        srclang: "en",
+        label: "English",
+        captionFile: "caption_in_base64",
+      },
+    };
+
+    sut.addCaption(params);
+
+    expect(client.post).toHaveBeenCalledWith(
+      "/library/123/videos/456/captions/en",
+      {
+        headers: {
+          accept: "application/json",
+          "content-type": "application/*+json",
+        },
+        data: {
+          srclang: "en",
+          label: "English",
+          captionFile: "caption_in_base64",
         },
       }
     );
