@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import axios from "axios";
 import { Upload } from "tus-js-client";
 
-import { BunnyValidationErrorResponse } from "./@types/bunny";
+import { BunnyValidationErrorResponse, DefaultResponse } from "./@types/bunny";
 
 export const readEnv = (envName: string): string | undefined => {
   if (typeof process === "undefined" || typeof process.env === "undefined") {
@@ -191,6 +191,7 @@ export class APIClient implements APIClientCompose {
           status: "failure",
           statusCode: response.status,
           data: {
+            origin: "bunny.net",
             error: errorMessage,
           },
         };
@@ -202,11 +203,22 @@ export class APIClient implements APIClientCompose {
         data: response.data,
       };
     } catch (error: any) {
+      if (error.response !== undefined) {
+        return {
+          status: "failure",
+          statusCode: error.response.status ?? 500,
+          data: {
+            origin: "bunny.net",
+            ...error.response.data,
+          },
+        };
+      }
       return {
         status: "failure",
-        statusCode: 500,
+        statusCode: error.response.status ?? 500,
         data: {
-          error: "A error occurred while processing the request",
+          origin: "bunnyjs sdk",
+          error: error.response.data.message ?? "Request failed",
         },
       };
     }
@@ -248,7 +260,9 @@ export namespace APIClient {
     statusCode: number;
     data:
       | BunnyValidationErrorResponse
+      | DefaultResponse
       | {
+          origin: string;
           error: string;
         };
   };

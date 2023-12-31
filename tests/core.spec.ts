@@ -1,4 +1,4 @@
-import { readEnv, APIClient } from "@bunnyjs/core";
+import { readEnv, APIClient } from "../src/core";
 import axios from "axios";
 
 jest.mock("axios");
@@ -176,9 +176,14 @@ describe("CoreTests", () => {
     it("should return a error if axios throws", async () => {
       const sut = makeSut();
 
-      jest
-        .spyOn(axios, "request")
-        .mockRejectedValueOnce(new Error("any_error"));
+      jest.spyOn(axios, "request").mockRejectedValueOnce({
+        response: {
+          status: 500,
+          data: {
+            message: "any_data",
+          },
+        },
+      });
 
       const promise = sut.get("/any_endpoint");
 
@@ -186,7 +191,8 @@ describe("CoreTests", () => {
         status: "failure",
         statusCode: 500,
         data: {
-          error: "A error occurred while processing the request",
+          origin: "bunny.net",
+          message: "any_data",
         },
       });
     });
