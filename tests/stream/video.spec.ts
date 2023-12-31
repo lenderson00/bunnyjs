@@ -124,6 +124,23 @@ class BNVideoStream {
 
     return this.client.post<VideoLibraryItem>(endpoint, options);
   }
+
+  public setThumbnail(
+    params: BNVideoStream.SetThumbnailVideoParams
+  ): Promise<APIClient.Response<DefaultResponse>> {
+    const { libraryId, videoId, ...data } = params;
+
+    const endpoint = `/library/${libraryId}/videos/${videoId}/thumbnail`;
+
+    const options = {
+      headers: {
+        accept: "application/json",
+      },
+      data,
+    };
+
+    return this.client.post<DefaultResponse>(endpoint, options);
+  }
 }
 
 namespace BNVideoStream {
@@ -175,6 +192,12 @@ namespace BNVideoStream {
     title: string;
     collectionId: string;
     thumbnailTime: number;
+  };
+
+  export type SetThumbnailVideoParams = {
+    libraryId: number;
+    videoId: string;
+    thumbnailUrl: string;
   };
 }
 
@@ -356,4 +379,24 @@ describe("Video Stream", () => {
       },
     });
   });
+
+  it("should set thumbnails for a video", async () => {
+    const params: BNVideoStream.SetThumbnailVideoParams = {
+        libraryId: 123,
+        videoId: "video12345",
+        thumbnailUrl: "https://example.com/thumbnail.png",
+    }
+
+    sut.setThumbnail(params);
+
+    expect(client.post).toHaveBeenCalledWith("/library/123/videos/video12345/thumbnail", {
+      headers: {
+        accept: "application/json",
+      },
+      data: {
+        thumbnailUrl: "https://example.com/thumbnail.png",
+      },
+    });
+
+    })
 });
