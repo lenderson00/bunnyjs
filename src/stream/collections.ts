@@ -1,9 +1,12 @@
-import { Collection, CollectionList, DefaultResponse } from "@bunnyjs/@types/bunny";
-import { APIClient, APIClientGet, DeleteClient, PostClient } from "@bunnyjs/core";
+import {
+  Collection,
+  CollectionList,
+  DefaultResponse,
+} from "@bunnyjs/@types/bunny";
+import { APIClient, GetClient, DeleteClient, PostClient } from "@bunnyjs/core";
 
-export 
-class BNCollection {
-  constructor(private client: APIClientGet & DeleteClient & PostClient) {}
+export class BNCollection {
+  constructor(private client: GetClient & DeleteClient & PostClient) {}
 
   async getList(
     params: BNCollection.GetCollectionListParams
@@ -83,15 +86,14 @@ class BNCollection {
         accept: "application/json",
         "content-type": "application/*+json",
       },
-        data: {
-            name,
-        },
+      data: {
+        name,
+      },
     };
 
     return this.client.post<DefaultResponse>(endpoint, input);
   }
 }
-
 
 export namespace BNCollection {
   export type GetCollectionListParams = {

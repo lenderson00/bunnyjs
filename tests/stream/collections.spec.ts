@@ -1,5 +1,5 @@
 import { mock, mockClear } from "jest-mock-extended";
-import { APIClient, APIClientGet, DeleteClient, PostClient } from "@bunnyjs/core";
+import { APIClient, GetClient, DeleteClient, PostClient } from "@bunnyjs/core";
 import {
   Collection,
   CollectionList,
@@ -7,9 +7,8 @@ import {
 } from "@bunnyjs/@types/bunny";
 import { BNCollection } from "@bunnyjs/stream/collections";
 
-
 describe("Collections Stream", () => {
-  let client: APIClientGet & DeleteClient & PostClient;
+  let client: GetClient & DeleteClient & PostClient;
   let sut: BNCollection;
 
   beforeEach(() => {
@@ -141,7 +140,7 @@ describe("Collections Stream", () => {
       },
       data: {
         name: "New Name",
-      }
+      },
     });
 
     expect(client.post).toHaveBeenCalledTimes(1);

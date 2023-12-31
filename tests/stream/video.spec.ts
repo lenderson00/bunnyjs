@@ -1,14 +1,18 @@
 import {
+  Chapter,
+  DefaultResponse,
   Heatmap,
+  MetaTag,
+  Moment,
   PaginatedVideoLibraryResponse,
   VideoLibraryItem,
   VideoStatistics,
 } from "@bunnyjs/@types/bunny";
-import { APIClient, APIClientGet } from "@bunnyjs/core";
+import { APIClient, GetClient, PostClient } from "@bunnyjs/core";
 import { mock, mockClear } from "jest-mock-extended";
 
 class BNVideoStream {
-  constructor(private client: APIClientGet) {}
+  constructor(private client: GetClient & PostClient) {}
 
   public get(
     params: BNVideoStream.GetVideoParams
@@ -68,6 +72,24 @@ class BNVideoStream {
 
     return this.client.get<PaginatedVideoLibraryResponse>(endpoint, options);
   }
+
+  public update(
+    params: BNVideoStream.UpdateVideoParams
+  ): Promise<APIClient.Response<DefaultResponse>> {
+    const { libraryId, videoId, ...data } = params;
+
+    const endpoint = `/library/${libraryId}/videos/${videoId}`;
+
+    const options = {
+      headers: {
+        accept: "application/json",
+        "content-type": "application/*+json",
+      },
+      data,
+    };
+
+    return this.client.post<DefaultResponse>(endpoint, options);
+  }
 }
 
 namespace BNVideoStream {
@@ -97,10 +119,20 @@ namespace BNVideoStream {
     orderBy?: string;
     collection?: string;
   };
+
+  export type UpdateVideoParams = {
+    libraryId: number;
+    videoId: string;
+    title?: string;
+    collectionId?: string;
+    chapters?: Chapter[];
+    moments?: Moment[];
+    metaTags?: MetaTag[];
+  };
 }
 
 describe("Video Stream", () => {
-  let client: APIClientGet;
+  let client: GetClient & PostClient;
   let sut: BNVideoStream;
 
   beforeAll(() => {
@@ -188,5 +220,51 @@ describe("Video Stream", () => {
     });
 
     expect(client.get).toHaveBeenCalledTimes(1);
+  });
+
+  it("should update a video", async () => {
+    const params: BNVideoStream.UpdateVideoParams = {
+      libraryId: 123,
+      videoId: "video12345",
+      title: "Example Video Title",
+      collectionId: "collection123",
+      chapters: [
+        { title: "Chapter 1", start: 0, end: 60 },
+        { title: "Chapter 2", start: 61, end: 120 },
+      ],
+      moments: [{ label: "Interesting Moment", timestamp: 30 }],
+      metaTags: [
+        { property: "keyword", value: "education" },
+        {
+          property: "description",
+          value: "An educational video about TypeScript",
+        },
+      ],
+    };
+
+    sut.update(params);
+
+    expect(client.post).toHaveBeenCalledWith("/library/123/videos/video12345", {
+      headers: {
+        accept: "application/json",
+        "content-type": "application/*+json",
+      },
+      data: {
+        title: "Example Video Title",
+        collectionId: "collection123",
+        chapters: [
+          { title: "Chapter 1", start: 0, end: 60 },
+          { title: "Chapter 2", start: 61, end: 120 },
+        ],
+        moments: [{ label: "Interesting Moment", timestamp: 30 }],
+        metaTags: [
+          { property: "keyword", value: "education" },
+          {
+            property: "description",
+            value: "An educational video about TypeScript",
+          },
+        ],
+      },
+    });
   });
 });

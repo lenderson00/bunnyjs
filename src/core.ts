@@ -19,7 +19,7 @@ export const readEnv = (envName: string): string | undefined => {
   return env;
 };
 
-export interface APIClientGet {
+export interface GetClient {
   get: <T>(
     endpoint: string,
     input?: APIClient.Request
@@ -51,9 +51,13 @@ export interface UploadClient {
   upload: (params: APIClient.UploadFileRequest) => void;
 }
 
-type APIClientCompose = APIClientGet & DeleteClient & PostClient & PutClient & UploadClient;
+type APIClientCompose = GetClient &
+  DeleteClient &
+  PostClient &
+  PutClient &
+  UploadClient;
 
-export class APIClient implements APIClientCompose  {
+export class APIClient implements APIClientCompose {
   private baseUrl?: string;
   private accessKey?: string;
 
