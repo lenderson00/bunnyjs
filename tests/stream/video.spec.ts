@@ -90,6 +90,22 @@ class BNVideoStream {
 
     return this.client.post<DefaultResponse>(endpoint, options);
   }
+
+  public reencode(
+    params: BNVideoStream.UpdateVideoParams
+  ): Promise<APIClient.Response<VideoLibraryItem>> {
+    const { libraryId, videoId } = params;
+
+    const endpoint = `/library/${libraryId}/videos/${videoId}/reencode`;
+
+    const options = {
+      headers: {
+        accept: "application/json",
+      },
+    };
+
+    return this.client.post<VideoLibraryItem>(endpoint, options);
+  }
 }
 
 namespace BNVideoStream {
@@ -128,6 +144,11 @@ namespace BNVideoStream {
     chapters?: Chapter[];
     moments?: Moment[];
     metaTags?: MetaTag[];
+  };
+
+  export type ReencodeVideoParams = {
+    libraryId: number;
+    videoId: string;
   };
 }
 
@@ -266,5 +287,23 @@ describe("Video Stream", () => {
         ],
       },
     });
+  });
+
+  it("should reencode a video", async () => {
+    const params: BNVideoStream.ReencodeVideoParams = {
+      libraryId: 123,
+      videoId: "video12345",
+    };
+
+    sut.reencode(params);
+
+    expect(client.post).toHaveBeenCalledWith(
+      "/library/123/videos/video12345/reencode",
+      {
+        headers: {
+          accept: "application/json",
+        },
+      }
+    );
   });
 });
