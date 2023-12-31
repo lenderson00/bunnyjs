@@ -57,7 +57,16 @@ export type VideoLibraryItem = {
   transcodingMessages: TranscodingMessage[];
 };
 
+export type ChartData = Record<string, number>;
 
 export type Heatmap = {
-  heatmap: Record<string, number>;
+  heatmap: ChartData;
+};
+
+export type VideoStatistics = {
+  viewsChart: ChartData;
+  watchTimeChart: ChartData;
+  countryViewCounts: ChartData;
+  countryWatchTime: ChartData;
+  engagementScore: number;
 };
