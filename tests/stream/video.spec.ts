@@ -198,6 +198,22 @@ class BNVideoStream {
 
     return this.client.delete<DefaultResponse>(endpoint, options);
   }
+
+  public deleteCaption(
+    params: BNVideoStream.DeleteCaptionParams
+  ): Promise<APIClient.Response<DefaultResponse>> {
+    const { libraryId, videoId, srclang } = params;
+
+    const endpoint = `/library/${libraryId}/videos/${videoId}/captions/${srclang}`;
+
+    const options = {
+      headers: {
+        accept: "application/json",
+      },
+    };
+
+    return this.client.delete<DefaultResponse>(endpoint, options);
+  }
 }
 
 namespace BNVideoStream {
@@ -280,6 +296,12 @@ namespace BNVideoStream {
   export type DeleteVideoParams = {
     libraryId: number;
     videoId: string;
+  };
+
+  export type DeleteCaptionParams = {
+    libraryId: number;
+    videoId: string;
+    srclang: string;
   };
 }
 
@@ -566,5 +588,24 @@ describe("Video Stream", () => {
     });
 
     expect(client.delete).toHaveBeenCalledTimes(1);
+  });
+
+  it("should delete a caption", async () => {
+    const params: BNVideoStream.DeleteCaptionParams = {
+      libraryId: 123,
+      videoId: "456",
+      srclang: "en",
+    };
+
+    sut.deleteCaption(params);
+
+    expect(client.delete).toHaveBeenCalledWith(
+      "/library/123/videos/456/captions/en",
+      {
+        headers: {
+          accept: "application/json",
+        },
+      }
+    );
   });
 });
