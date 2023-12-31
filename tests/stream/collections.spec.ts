@@ -3,7 +3,7 @@ import { APIClient, APIClientGet } from "@bunnyjs/core";
 import { Collection, CollectionList, DefaultResponse } from "@bunnyjs/@types/bunny";
 
 class BNCollection {
-  constructor(private clientGet: APIClientGet, private clientDelete: DeleteClient) {}
+  constructor(private client: APIClientGet & DeleteClient) {}
 
   async getList(
     params: BNCollection.GetCollectionListParams
@@ -19,7 +19,7 @@ class BNCollection {
       data,
     };
 
-    return this.clientGet.get<CollectionList>(endpoint, input);
+    return this.client.get<CollectionList>(endpoint, input);
   }
 
   async get(
@@ -35,7 +35,7 @@ class BNCollection {
       },
     };
 
-    return this.clientGet.get<Collection>(endpoint, input);
+    return this.client.get<Collection>(endpoint, input);
   }
 
   async delete(
@@ -51,7 +51,7 @@ class BNCollection {
       },
     };
 
-    return this.clientDelete.delete<DefaultResponse>(endpoint, input);
+    return this.client.delete<DefaultResponse>(endpoint, input);
   }
 }
 
@@ -84,18 +84,16 @@ interface DeleteClient {
 
 
 describe("Collections Stream", () => {
-  let clientGet: APIClientGet;
-  let clientDelete: DeleteClient;
+  let client: APIClientGet & DeleteClient;
   let sut: BNCollection;
 
   beforeEach(() => {
-    clientGet = mock();
-    clientDelete = mock();
-    sut = new BNCollection(clientGet, clientDelete);
+    client = mock();
+    sut = new BNCollection(client);
   });
 
   afterEach(() => {
-    mockClear(clientGet);
+    mockClear(client);
   });
 
   it("should call Client.get with corrects params", async () => {
@@ -107,7 +105,7 @@ describe("Collections Stream", () => {
     await sut.getList(params);
 
     // Assert
-    expect(clientGet.get).toHaveBeenCalledWith("/library/523/collections", {
+    expect(client.get).toHaveBeenCalledWith("/library/523/collections", {
       headers: {
         accept: "application/json",
       },
@@ -115,7 +113,7 @@ describe("Collections Stream", () => {
         orderBy: "date",
       },
     });
-    expect(clientGet.get).toHaveBeenCalledTimes(1);
+    expect(client.get).toHaveBeenCalledTimes(1);
   });
 
   it("should return a list of collections", async () => {
@@ -142,7 +140,7 @@ describe("Collections Stream", () => {
       },
     };
 
-    (clientGet.get as jest.Mock).mockResolvedValue({ ...response });
+    (client.get as jest.Mock).mockResolvedValue({ ...response });
 
     // Act
     const result = await sut.getList(params);
@@ -159,13 +157,13 @@ describe("Collections Stream", () => {
 
     sut.get(params);
 
-    expect(clientGet.get).toHaveBeenCalledWith("/library/123/collections/456", {
+    expect(client.get).toHaveBeenCalledWith("/library/123/collections/456", {
       headers: {
         accept: "application/json",
       },
     });
 
-    expect(clientGet.get).toHaveBeenCalledTimes(1);
+    expect(client.get).toHaveBeenCalledTimes(1);
   });
 
   it("should delete a collection", async () => {
@@ -176,12 +174,14 @@ describe("Collections Stream", () => {
 
     sut.delete(params);
     
-    expect(clientDelete.delete).toHaveBeenCalledWith("/library/123/collections/456", {
+    expect(client.delete).toHaveBeenCalledWith("/library/123/collections/456", {
       headers: {
         accept: "application/json",
       },
     });
 
-    expect(clientDelete.delete).toHaveBeenCalledTimes(1); 
+    expect(client.delete).toHaveBeenCalledTimes(1); 
   })
+
+  
 });
