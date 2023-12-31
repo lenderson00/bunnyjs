@@ -106,6 +106,24 @@ class BNVideoStream {
 
     return this.client.post<VideoLibraryItem>(endpoint, options);
   }
+
+  public create(
+    params: BNVideoStream.CreateVideoParams
+  ): Promise<APIClient.Response<VideoLibraryItem>> {
+    const { libraryId, videoId, ...data } = params;
+
+    const endpoint = `/library/${libraryId}/videos/${videoId}`;
+
+    const options = {
+      headers: {
+        accept: "application/json",
+        "content-type": "application/*+json",
+      },
+      data,
+    };
+
+    return this.client.post<VideoLibraryItem>(endpoint, options);
+  }
 }
 
 namespace BNVideoStream {
@@ -149,6 +167,14 @@ namespace BNVideoStream {
   export type ReencodeVideoParams = {
     libraryId: number;
     videoId: string;
+  };
+
+  export type CreateVideoParams = {
+    libraryId: number;
+    videoId: string;
+    title: string;
+    collectionId: string;
+    thumbnailTime: number;
   };
 }
 
@@ -305,5 +331,29 @@ describe("Video Stream", () => {
         },
       }
     );
+  });
+
+  it("should create a video", async () => {
+    const params: BNVideoStream.CreateVideoParams = {
+      libraryId: 123,
+      videoId: "video12345",
+      title: "Example Video Title",
+      collectionId: "collection123",
+      thumbnailTime: 30,
+    };
+
+    sut.create(params);
+
+    expect(client.post).toHaveBeenCalledWith("/library/123/videos/video12345", {
+      headers: {
+        accept: "application/json",
+        "content-type": "application/*+json",
+      },
+      data: {
+        title: "Example Video Title",
+        collectionId: "collection123",
+        thumbnailTime: 30,
+      },
+    });
   });
 });
