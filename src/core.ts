@@ -26,7 +26,34 @@ export interface APIClientGet {
   ) => Promise<APIClient.Response<T>>;
 }
 
-export class APIClient implements APIClientGet {
+export interface DeleteClient {
+  delete: <T>(
+    endpoint: string,
+    input?: APIClient.Request
+  ) => Promise<APIClient.Response<T>>;
+}
+
+export interface PostClient {
+  post: <T>(
+    endpoint: string,
+    input?: APIClient.Request
+  ) => Promise<APIClient.Response<T>>;
+}
+
+export interface PutClient {
+  put: <T>(
+    endpoint: string,
+    input?: APIClient.Request
+  ) => Promise<APIClient.Response<T>>;
+}
+
+export interface UploadClient {
+  upload: (params: APIClient.UploadFileRequest) => void;
+}
+
+type APIClientCompose = APIClientGet & DeleteClient & PostClient & PutClient & UploadClient;
+
+export class APIClient implements APIClientCompose  {
   private baseUrl?: string;
   private accessKey?: string;
 
