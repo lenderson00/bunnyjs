@@ -1,9 +1,13 @@
 import { mock, mockClear } from "jest-mock-extended";
 import { APIClient, APIClientGet } from "@bunnyjs/core";
-import { Collection, CollectionList, DefaultResponse } from "@bunnyjs/@types/bunny";
+import {
+  Collection,
+  CollectionList,
+  DefaultResponse,
+} from "@bunnyjs/@types/bunny";
 
 class BNCollection {
-  constructor(private client: APIClientGet & DeleteClient) {}
+  constructor(private client: APIClientGet & DeleteClient & PostClient) {}
 
   async getList(
     params: BNCollection.GetCollectionListParams
@@ -53,6 +57,23 @@ class BNCollection {
 
     return this.client.delete<DefaultResponse>(endpoint, input);
   }
+
+  async create(
+    params: BNCollection.CreateCollectionParams
+  ): Promise<APIClient.Response<Collection>> {
+    const { libraryId } = params;
+
+    const endpoint = `/library/${libraryId}/collections`;
+
+    const input = {
+      headers: {
+        accept: "application/json",
+        "content-type": "application/*+json",
+      },
+    };
+
+    return this.client.post<Collection>(endpoint, input);
+  }
 }
 
 namespace BNCollection {
@@ -72,19 +93,29 @@ namespace BNCollection {
   export type DeleteCollectionParams = {
     libraryId: number;
     collectionId: string;
-  }
+  };
+
+  export type CreateCollectionParams = {
+    libraryId: number;
+  };
 }
 
 interface DeleteClient {
-    delete: <T>(
-        endpoint: string,
-        input?: APIClient.Request
-    ) => Promise<APIClient.Response<T>>;
+  delete: <T>(
+    endpoint: string,
+    input?: APIClient.Request
+  ) => Promise<APIClient.Response<T>>;
 }
 
+interface PostClient {
+  post: <T>(
+    endpoint: string,
+    input?: APIClient.Request
+  ) => Promise<APIClient.Response<T>>;
+}
 
 describe("Collections Stream", () => {
-  let client: APIClientGet & DeleteClient;
+  let client: APIClientGet & DeleteClient & PostClient;
   let sut: BNCollection;
 
   beforeEach(() => {
@@ -173,15 +204,30 @@ describe("Collections Stream", () => {
     };
 
     sut.delete(params);
-    
+
     expect(client.delete).toHaveBeenCalledWith("/library/123/collections/456", {
       headers: {
         accept: "application/json",
       },
     });
 
-    expect(client.delete).toHaveBeenCalledTimes(1); 
-  })
+    expect(client.delete).toHaveBeenCalledTimes(1);
+  });
 
-  
+  it("should create a collection", async () => {
+    const params: BNCollection.CreateCollectionParams = {
+      libraryId: 123,
+    };
+
+    sut.create(params);
+
+    expect(client.post).toHaveBeenCalledWith("/library/123/collections", {
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/*+json',
+      },
+    });
+
+    expect(client.post).toHaveBeenCalledTimes(1);
+  });
 });
