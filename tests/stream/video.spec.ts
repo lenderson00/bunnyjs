@@ -8,11 +8,11 @@ import {
   VideoLibraryItem,
   VideoStatistics,
 } from "@bunnyjs/@types/bunny";
-import { APIClient, GetClient, PostClient } from "@bunnyjs/core";
+import { APIClient, DeleteClient, GetClient, PostClient } from "@bunnyjs/core";
 import { mock, mockClear } from "jest-mock-extended";
 
 class BNVideoStream {
-  constructor(private client: GetClient & PostClient) {}
+  constructor(private client: GetClient & PostClient & DeleteClient) {}
 
   public get(
     params: BNVideoStream.GetVideoParams
@@ -182,6 +182,22 @@ class BNVideoStream {
 
     return this.client.post<DefaultResponse>(endpoint, options);
   }
+
+  public delete(
+    params: BNVideoStream.DeleteVideoParams
+  ): Promise<APIClient.Response<DefaultResponse>> {
+    const { libraryId, videoId } = params;
+
+    const endpoint = `/library/${libraryId}/videos/${videoId}`;
+
+    const options = {
+      headers: {
+        accept: "application/json",
+      },
+    };
+
+    return this.client.delete<DefaultResponse>(endpoint, options);
+  }
 }
 
 namespace BNVideoStream {
@@ -260,10 +276,15 @@ namespace BNVideoStream {
       captionFile: string;
     };
   };
+
+  export type DeleteVideoParams = {
+    libraryId: number;
+    videoId: string;
+  };
 }
 
 describe("Video Stream", () => {
-  let client: GetClient & PostClient;
+  let client: GetClient & PostClient & DeleteClient;
   let sut: BNVideoStream;
 
   beforeAll(() => {
@@ -528,5 +549,22 @@ describe("Video Stream", () => {
     );
 
     expect(client.post).toHaveBeenCalledTimes(1);
+  });
+
+  it("should delete a video", async () => {
+    const params: BNVideoStream.DeleteVideoParams = {
+      libraryId: 123,
+      videoId: "456",
+    };
+
+    sut.delete(params);
+
+    expect(client.delete).toHaveBeenCalledWith("/library/123/videos/456", {
+      headers: {
+        accept: "application/json",
+      },
+    });
+
+    expect(client.delete).toHaveBeenCalledTimes(1);
   });
 });
