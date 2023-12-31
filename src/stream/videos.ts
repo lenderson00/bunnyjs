@@ -7,7 +7,7 @@ import {
   PaginatedVideoLibraryResponse,
   VideoLibraryItem,
   VideoStatistics,
-} from "@bunnyjs/@types/bunny";
+} from "../@types/bunny";
 
 import {
   APIClient,
@@ -15,7 +15,7 @@ import {
   GetClient,
   PostClient,
   UploadClient,
-} from "@bunnyjs/core";
+} from "../core";
 
 export class BNVideoStream {
   constructor(
@@ -118,9 +118,9 @@ export class BNVideoStream {
   public create(
     params: BNVideoStream.CreateVideoParams
   ): Promise<APIClient.Response<VideoLibraryItem>> {
-    const { libraryId, videoId, ...data } = params;
+    const { libraryId, ...data } = params;
 
-    const endpoint = `/library/${libraryId}/videos/${videoId}`;
+    const endpoint = `/library/${libraryId}/videos`;
 
     const options = {
       headers: {
@@ -273,10 +273,9 @@ export namespace BNVideoStream {
 
   export type CreateVideoParams = {
     libraryId: number;
-    videoId: string;
     title: string;
-    collectionId: string;
-    thumbnailTime: number;
+    collectionId?: string;
+    thumbnailTime?: number;
   };
 
   export type SetThumbnailVideoParams = {

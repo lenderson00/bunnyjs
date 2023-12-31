@@ -2,7 +2,6 @@ import { createHash } from "crypto";
 import axios from "axios";
 import { Upload } from "tus-js-client";
 
-import { RequestError } from "../src/errors";
 import { BunnyValidationErrorResponse } from "./@types/bunny";
 
 export const readEnv = (envName: string): string | undefined => {
@@ -78,36 +77,39 @@ export class APIClient implements APIClientCompose {
     endpoint: string,
     input?: APIClient.Request
   ): Promise<APIClient.Response<T>> {
-    return this.makeRequest(endpoint, "GET", input);
+    return await this.makeRequest(endpoint, "GET", input);
   }
 
   async post<T = any>(
     endpoint: string,
     input?: APIClient.Request
   ): Promise<APIClient.Response<T>> {
-    return this.makeRequest(endpoint, "POST", input);
+    return await this.makeRequest(endpoint, "POST", input);
   }
 
   async put<T = any>(
     endpoint: string,
     input?: APIClient.Request
   ): Promise<APIClient.Response<T>> {
-    return this.makeRequest(endpoint, "PUT", input);
+    return await this.makeRequest(endpoint, "PUT", input);
   }
 
   async delete<T = any>(
     endpoint: string,
     input?: APIClient.Request
   ): Promise<APIClient.Response<T>> {
-    return this.makeRequest(endpoint, "DELETE", input);
+    return await this.makeRequest(endpoint, "DELETE", input);
   }
 
   async upload(params: APIClient.UploadFileRequest) {
-    const expireTime = params.expireTime ?? 60 * 60 * 24 * 1000;
+    const expireTimeNormal = params.expireTime ?? 60 * 60 * 24 * 1000;
+
+    const expireTimeUnix = new Date(new Date().getTime() + expireTimeNormal);
+
     const signature = this.createSignature({
       libraryId: params.libraryId,
       videoId: params.videoId,
-      expireTime,
+      expireTime: expireTimeUnix,
     });
 
     const uploadTUS = new Upload(params.file, {
@@ -117,7 +119,7 @@ export class APIClient implements APIClientCompose {
       ],
       headers: {
         AuthorizationSignature: signature,
-        AuthorizationExpire: `${expireTime}`,
+        AuthorizationExpire: `${expireTimeUnix.getTime()}`,
         VideoId: params.videoId,
         LibraryId: `${params.libraryId}`,
       },
@@ -131,7 +133,8 @@ export class APIClient implements APIClientCompose {
       onProgress: params.onProgress,
       onSuccess: params.onSuccess,
     });
-    uploadTUS.findPreviousUploads().then(function (previousUploads) {
+
+    await uploadTUS.findPreviousUploads().then(function (previousUploads) {
       // Found previous uploads so we select the first one.
       if (previousUploads.length) {
         uploadTUS.resumeFromPreviousUpload(previousUploads[0]);
@@ -213,11 +216,9 @@ export class APIClient implements APIClientCompose {
   }
 
   createSignature(input: APIClient.CreateSignatureParams): string {
-    const date = new Date(new Date().getTime() + input.expireTime);
-
-    const stringToSign = `${input.libraryId}${this.accessKey}${date.getTime()}${
-      input.videoId
-    }`;
+    const stringToSign = `${input.libraryId}${
+      this.accessKey
+    }${input.expireTime.getTime()}${input.videoId}`;
 
     const signature = createHash("sha256").update(stringToSign).digest("hex");
 
@@ -276,6 +277,6 @@ export namespace APIClient {
   export type CreateSignatureParams = {
     libraryId: number;
     videoId: string;
-    expireTime: number;
+    expireTime: Date;
   };
 }

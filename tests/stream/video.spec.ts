@@ -1,8 +1,11 @@
-
-import { DeleteClient, GetClient, PostClient, UploadClient } from "@bunnyjs/core";
+import {
+  DeleteClient,
+  GetClient,
+  PostClient,
+  UploadClient,
+} from "@bunnyjs/core";
 import { BNVideoStream } from "@bunnyjs/stream/videos";
 import { mock, mockClear } from "jest-mock-extended";
-
 
 describe("Video Stream", () => {
   let client: GetClient & PostClient & DeleteClient & UploadClient;
@@ -162,7 +165,6 @@ describe("Video Stream", () => {
   it("should create a video", async () => {
     const params: BNVideoStream.CreateVideoParams = {
       libraryId: 123,
-      videoId: "video12345",
       title: "Example Video Title",
       collectionId: "collection123",
       thumbnailTime: 30,
@@ -170,7 +172,7 @@ describe("Video Stream", () => {
 
     sut.create(params);
 
-    expect(client.post).toHaveBeenCalledWith("/library/123/videos/video12345", {
+    expect(client.post).toHaveBeenCalledWith("/library/123/videos", {
       headers: {
         accept: "application/json",
         "content-type": "application/*+json",
@@ -325,6 +327,5 @@ describe("Video Stream", () => {
 
     expect(client.upload).toHaveBeenCalledWith(params);
     expect(client.upload).toHaveBeenCalledTimes(1);
-
-  })
+  });
 });

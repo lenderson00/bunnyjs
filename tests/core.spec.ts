@@ -241,7 +241,7 @@ describe("CoreTests", () => {
       const createSignatureParams: APIClient.CreateSignatureParams = {
         libraryId: 1,
         videoId: "any_file_name",
-        expireTime: 1000,
+        expireTime: new Date(),
       };
 
       const sut = makeSut();
@@ -261,7 +261,7 @@ describe("CoreTests", () => {
       sut.createSignature({
         libraryId: 1,
         videoId: "any_file_name",
-        expireTime: 1000,
+        expireTime: new Date(),
       });
 
       const hash = createSignatureSpy.mock.results[0].value;
