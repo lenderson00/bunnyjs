@@ -1,11 +1,11 @@
 import { mock, mockClear } from "jest-mock-extended";
-import { APIClient, GetClient, DeleteClient, PostClient } from "@bunnyjs/core";
+import { APIClient, GetClient, DeleteClient, PostClient } from "../../src/core";
 import {
   Collection,
   CollectionList,
   DefaultResponse,
-} from "@bunnyjs/@types/bunny";
-import { BNCollection } from "@bunnyjs/stream/collections";
+} from "../../src/@types/bunny";
+import { BNCollection } from "../../src/stream/collections";
 
 describe("Collections Stream", () => {
   let client: GetClient & DeleteClient & PostClient;

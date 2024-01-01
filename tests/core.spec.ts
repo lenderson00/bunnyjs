@@ -3,6 +3,12 @@ import axios from "axios";
 
 jest.mock("axios");
 
+class APIClientStub extends APIClient {
+  constructor(params: APIClient.Params) {
+    super(params);
+  }
+}
+
 describe("CoreTests", () => {
   describe("readEnv", () => {
     const originalProcess = process.env;
@@ -77,7 +83,7 @@ describe("CoreTests", () => {
       };
 
       const createSut = () => {
-        return new APIClient(apiParams);
+        return new APIClientStub(apiParams);
       };
 
       expect(createSut).toThrow();
@@ -90,7 +96,7 @@ describe("CoreTests", () => {
       };
 
       const createSut = () => {
-        return new APIClient(apiParams);
+        return new APIClientStub(apiParams);
       };
 
       expect(createSut).toThrow();
@@ -101,7 +107,7 @@ describe("CoreTests", () => {
 
       const makeRequestSpy = jest.spyOn(sut as any, "makeRequest");
 
-      await sut.get("/any_endpoint");
+      await (sut as any).get("/any_endpoint");
 
       expect(makeRequestSpy).toHaveBeenCalledWith(
         "/any_endpoint",
@@ -115,7 +121,7 @@ describe("CoreTests", () => {
 
       const makeRequestSpy = jest.spyOn(sut as any, "makeRequest");
 
-      await sut.get("/any_endpoint");
+      await (sut as any).get("/any_endpoint");
 
       expect(makeRequestSpy).toHaveBeenCalledTimes(1);
     });
@@ -125,7 +131,7 @@ describe("CoreTests", () => {
 
       const buildURLSpy = jest.spyOn(sut as any, "buildURL");
 
-      await sut.get("/any_endpoint");
+      await (sut as any).get("/any_endpoint");
 
       expect(buildURLSpy).toHaveBeenCalledWith("/any_endpoint");
     });
@@ -135,7 +141,7 @@ describe("CoreTests", () => {
 
       const buildURLSpy = jest.spyOn(sut as any, "buildURL");
 
-      await sut.get("/any_endpoint");
+      await (sut as any).get("/any_endpoint");
 
       const urlBuiled = buildURLSpy.mock.results[0].value;
 
@@ -147,7 +153,7 @@ describe("CoreTests", () => {
 
       const axiosSpy = jest.spyOn(axios, "request");
 
-      await sut.get("/any_endpoint");
+      await (sut as any).get("/any_endpoint");
 
       expect(axiosSpy).toHaveBeenCalledTimes(1);
     });
@@ -157,7 +163,7 @@ describe("CoreTests", () => {
 
       const axiosSpy = jest.spyOn(axios, "request");
 
-      await sut.get("/any_endpoint");
+      await (sut as any).get("/any_endpoint");
 
       const axiosParams = axiosSpy.mock.calls[0][0];
 
@@ -185,7 +191,7 @@ describe("CoreTests", () => {
         },
       });
 
-      const promise = sut.get("/any_endpoint");
+      const promise = (sut as any).get("/any_endpoint");
 
       await expect(promise).resolves.toEqual({
         status: "failure",
@@ -200,7 +206,7 @@ describe("CoreTests", () => {
     it("should return a Response if axios returns", async () => {
       const sut = makeSut();
 
-      const result = await sut.get("/any_endpoint");
+      const result = await (sut as any).get("/any_endpoint");
 
       expect(result).toEqual({
         status: "success",
@@ -221,7 +227,7 @@ describe("CoreTests", () => {
         },
       });
 
-      const result = await sut.get("/any_endpoint");
+      const result = await (sut as any).get("/any_endpoint");
 
       expect(result.status).toEqual("failure");
       expect(result.statusCode).toEqual(403);
@@ -254,7 +260,7 @@ describe("CoreTests", () => {
 
       const createSignatureSpy = jest.spyOn(sut as any, "createSignature");
 
-      sut.createSignature(createSignatureParams);
+      (sut as any).createSignature(createSignatureParams);
 
       expect(createSignatureSpy).toHaveBeenCalledWith(createSignatureParams);
     });
@@ -264,7 +270,7 @@ describe("CoreTests", () => {
 
       const createSignatureSpy = jest.spyOn(sut as any, "createSignature");
 
-      sut.createSignature({
+      (sut as any).createSignature({
         libraryId: 1,
         videoId: "any_file_name",
         expireTime: new Date(),
@@ -289,5 +295,5 @@ const makeSut = (): APIClient => {
     accessKey: "any_key",
   };
 
-  return new APIClient(apiParams);
+  return new APIClientStub(apiParams);
 };

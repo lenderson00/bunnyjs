@@ -3,16 +3,21 @@ import {
   GetClient,
   PostClient,
   UploadClient,
-} from "@bunnyjs/core";
-import { BNVideoStream } from "@bunnyjs/stream/videos";
+} from "../../src/core";
+import { BNVideoStream, LibraryIdClient } from "../../src/stream/videos";
 import { mock, mockClear } from "jest-mock-extended";
 
 describe("Video Stream", () => {
-  let client: GetClient & PostClient & DeleteClient & UploadClient;
+  let client: GetClient &
+    PostClient &
+    DeleteClient &
+    UploadClient &
+    LibraryIdClient;
   let sut: BNVideoStream;
 
   beforeAll(() => {
     client = mock();
+    client.libraryId = 123;
   });
 
   beforeEach(() => {
@@ -25,7 +30,6 @@ describe("Video Stream", () => {
 
   it("should get a single video", async () => {
     const params: BNVideoStream.GetVideoParams = {
-      libraryId: 123,
       videoId: "456",
     };
 
@@ -42,7 +46,6 @@ describe("Video Stream", () => {
 
   it("should get a heatmap for a single video", async () => {
     const params: BNVideoStream.GetVideoParams = {
-      libraryId: 123,
       videoId: "456",
     };
 
@@ -59,7 +62,6 @@ describe("Video Stream", () => {
 
   it("should get the video statistics", async () => {
     const params: BNVideoStream.GetVideoStatisticsParams = {
-      libraryId: 123,
       videoGuid: "456",
     };
 
@@ -76,7 +78,6 @@ describe("Video Stream", () => {
 
   it("should list all videos in a given library", async () => {
     const params: BNVideoStream.GetVideoListParams = {
-      libraryId: 123,
       page: 1,
       itemsPerPage: 10,
       search: "foo",
@@ -100,7 +101,6 @@ describe("Video Stream", () => {
 
   it("should update a video", async () => {
     const params: BNVideoStream.UpdateVideoParams = {
-      libraryId: 123,
       videoId: "video12345",
       title: "Example Video Title",
       collectionId: "collection123",
@@ -146,7 +146,6 @@ describe("Video Stream", () => {
 
   it("should reencode a video", async () => {
     const params: BNVideoStream.ReencodeVideoParams = {
-      libraryId: 123,
       videoId: "video12345",
     };
 
@@ -164,7 +163,6 @@ describe("Video Stream", () => {
 
   it("should create a video", async () => {
     const params: BNVideoStream.CreateVideoParams = {
-      libraryId: 123,
       title: "Example Video Title",
       collectionId: "collection123",
       thumbnailTime: 30,
@@ -187,7 +185,6 @@ describe("Video Stream", () => {
 
   it("should set thumbnails for a video", async () => {
     const params: BNVideoStream.SetThumbnailVideoParams = {
-      libraryId: 123,
       videoId: "video12345",
       thumbnailUrl: "https://example.com/thumbnail.png",
     };
@@ -211,7 +208,6 @@ describe("Video Stream", () => {
 
   it("should fecth a video from url", async () => {
     const params: BNVideoStream.FetchVideoParams = {
-      libraryId: 123,
       videoId: "456",
       collectionId: "231231",
       url: "https://example.com/video.mp4",
@@ -245,7 +241,6 @@ describe("Video Stream", () => {
 
   it("should add caption for a given video", async () => {
     const params: BNVideoStream.AddCaptionParams = {
-      libraryId: 123,
       videoId: "456",
       caption: {
         srclang: "en",
@@ -276,7 +271,6 @@ describe("Video Stream", () => {
 
   it("should delete a video", async () => {
     const params: BNVideoStream.DeleteVideoParams = {
-      libraryId: 123,
       videoId: "456",
     };
 
@@ -293,7 +287,6 @@ describe("Video Stream", () => {
 
   it("should delete a caption", async () => {
     const params: BNVideoStream.DeleteCaptionParams = {
-      libraryId: 123,
       videoId: "456",
       srclang: "en",
     };

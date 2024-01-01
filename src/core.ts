@@ -50,13 +50,13 @@ export interface UploadClient {
   upload: (params: APIClient.UploadFileRequest) => Promise<void>;
 }
 
-type APIClientCompose = GetClient &
+export type APIClientCompose = GetClient &
   DeleteClient &
   PostClient &
   PutClient &
   UploadClient;
 
-export class APIClient implements APIClientCompose {
+export abstract class APIClient {
   private baseUrl?: string;
   private accessKey?: string;
 
@@ -73,35 +73,35 @@ export class APIClient implements APIClientCompose {
     }
   }
 
-  async get<T = any>(
+  protected async get<T = any>(
     endpoint: string,
     input?: APIClient.Request
   ): Promise<APIClient.Response<T>> {
     return await this.makeRequest(endpoint, "GET", input);
   }
 
-  async post<T = any>(
+  protected async post<T = any>(
     endpoint: string,
     input?: APIClient.Request
   ): Promise<APIClient.Response<T>> {
     return await this.makeRequest(endpoint, "POST", input);
   }
 
-  async put<T = any>(
+  protected async put<T = any>(
     endpoint: string,
     input?: APIClient.Request
   ): Promise<APIClient.Response<T>> {
     return await this.makeRequest(endpoint, "PUT", input);
   }
 
-  async delete<T = any>(
+  protected async delete<T = any>(
     endpoint: string,
     input?: APIClient.Request
   ): Promise<APIClient.Response<T>> {
     return await this.makeRequest(endpoint, "DELETE", input);
   }
 
-  async upload(params: APIClient.UploadFileRequest) {
+  protected async upload(params: APIClient.UploadFileRequest) {
     const expireTimeNormal = params.expireTime ?? 60 * 60 * 24 * 1000;
 
     const expireTimeUnix = new Date(new Date().getTime() + expireTimeNormal);
@@ -145,7 +145,7 @@ export class APIClient implements APIClientCompose {
     });
   }
 
-  private async makeRequest(
+  protected async makeRequest(
     endpoint: string,
     method: APIClient.Methods,
     input?: APIClient.Request
@@ -223,11 +223,11 @@ export class APIClient implements APIClientCompose {
       };
     }
   }
-  private buildURL(endpoint: string) {
+  protected buildURL(endpoint: string) {
     return `${this.baseUrl}${endpoint}`;
   }
 
-  createSignature(input: APIClient.CreateSignatureParams): string {
+  protected createSignature(input: APIClient.CreateSignatureParams): string {
     const stringToSign = `${input.libraryId}${
       this.accessKey
     }${input.expireTime.getTime()}${input.videoId}`;

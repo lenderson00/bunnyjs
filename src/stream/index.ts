@@ -5,11 +5,13 @@ import { BNCollection } from "./collections";
 type ClientOptions = {
   accessKey?: string;
   baseUrl?: string;
+  libraryId?: string;
 };
 
 export class BunnyStreamClient extends CORE.APIClient {
   public videos: BNVideoStream;
   public collections: BNCollection;
+  public libraryId?: string;
 
   constructor(options?: ClientOptions) {
     super({
@@ -20,7 +22,10 @@ export class BunnyStreamClient extends CORE.APIClient {
       accessKey: options?.accessKey || CORE.readEnv("BUNNY_STREAM_ACCESS_KEY"),
     });
 
-    this.videos = new BNVideoStream(this);
-    this.collections = new BNCollection(this);
+    this.libraryId =
+      options?.libraryId || CORE.readEnv("BUNNY_STREAM_LIBRARY_ID");
+
+    this.videos = new BNVideoStream(this as any);
+    this.collections = new BNCollection(this as any);
   }
 }
