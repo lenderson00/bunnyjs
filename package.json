@@ -1,13 +1,17 @@
 {
-  "name": "bunnyjs",
-  "version": "0.0.1",
+  "name": "@bunnyjs/stream",
+  "version": "0.1.0",
   "description": "A simple Bunny Client for javascript",
   "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.prod.json",
     "test": "jest --passWithNoTests --no-cache --runInBand",
     "test:watch": "npm test -- --watch",
-    "test:coverage": "npm t -- --coverage"
+    "test:coverage": "npm t -- --coverage",
+    "publish": "npm run build && npm publish --access public"
   },
   "repository": {
     "type": "git",
