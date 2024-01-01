@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import axios from "axios";
 import { Upload } from "tus-js-client";
 
-import { RequestError } from "@bunnyjs/errors";
+import { BunnyValidationErrorResponse, DefaultResponse } from "./@types/bunny";
 
 export const readEnv = (envName: string): string | undefined => {
   if (typeof process === "undefined" || typeof process.env === "undefined") {
@@ -18,9 +18,47 @@ export const readEnv = (envName: string): string | undefined => {
   return env;
 };
 
-export class APIClient {
-  private baseUrl: string;
-  private accessKey: string;
+export interface GetClient {
+  get: <T>(
+    endpoint: string,
+    input?: APIClient.Request
+  ) => Promise<APIClient.Response<T>>;
+}
+
+export interface DeleteClient {
+  delete: <T>(
+    endpoint: string,
+    input?: APIClient.Request
+  ) => Promise<APIClient.Response<T>>;
+}
+
+export interface PostClient {
+  post: <T>(
+    endpoint: string,
+    input?: APIClient.Request
+  ) => Promise<APIClient.Response<T>>;
+}
+
+export interface PutClient {
+  put: <T>(
+    endpoint: string,
+    input?: APIClient.Request
+  ) => Promise<APIClient.Response<T>>;
+}
+
+export interface UploadClient {
+  upload: (params: APIClient.UploadFileRequest) => Promise<void>;
+}
+
+export type APIClientCompose = GetClient &
+  DeleteClient &
+  PostClient &
+  PutClient &
+  UploadClient;
+
+export abstract class APIClient {
+  private baseUrl?: string;
+  private accessKey?: string;
 
   constructor(params: APIClient.Params) {
     this.baseUrl = params.baseUrl;
@@ -35,40 +73,43 @@ export class APIClient {
     }
   }
 
-  async get(
+  protected async get<T = any>(
     endpoint: string,
     input?: APIClient.Request
-  ): Promise<APIClient.Response> {
-    return this.makeRequest(endpoint, "GET", input);
+  ): Promise<APIClient.Response<T>> {
+    return await this.makeRequest(endpoint, "GET", input);
   }
 
-  async post(
+  protected async post<T = any>(
     endpoint: string,
     input?: APIClient.Request
-  ): Promise<APIClient.Response> {
-    return this.makeRequest(endpoint, "POST", input);
+  ): Promise<APIClient.Response<T>> {
+    return await this.makeRequest(endpoint, "POST", input);
   }
 
-  async put(
+  protected async put<T = any>(
     endpoint: string,
     input?: APIClient.Request
-  ): Promise<APIClient.Response> {
-    return this.makeRequest(endpoint, "PUT", input);
+  ): Promise<APIClient.Response<T>> {
+    return await this.makeRequest(endpoint, "PUT", input);
   }
 
-  async delete(
+  protected async delete<T = any>(
     endpoint: string,
     input?: APIClient.Request
-  ): Promise<APIClient.Response> {
-    return this.makeRequest(endpoint, "DELETE", input);
+  ): Promise<APIClient.Response<T>> {
+    return await this.makeRequest(endpoint, "DELETE", input);
   }
 
-  async upload(params: APIClient.UploadFileRequest) {
-    const expireTime = params.expireTime ?? 60 * 60 * 24 * 1000;
+  protected async upload(params: APIClient.UploadFileRequest) {
+    const expireTimeNormal = params.expireTime ?? 60 * 60 * 24 * 1000;
+
+    const expireTimeUnix = new Date(new Date().getTime() + expireTimeNormal);
+
     const signature = this.createSignature({
       libraryId: params.libraryId,
       videoId: params.videoId,
-      expireTime,
+      expireTime: expireTimeUnix,
     });
 
     const uploadTUS = new Upload(params.file, {
@@ -78,7 +119,7 @@ export class APIClient {
       ],
       headers: {
         AuthorizationSignature: signature,
-        AuthorizationExpire: `${expireTime}`,
+        AuthorizationExpire: `${expireTimeUnix.getTime()}`,
         VideoId: params.videoId,
         LibraryId: `${params.libraryId}`,
       },
@@ -92,7 +133,8 @@ export class APIClient {
       onProgress: params.onProgress,
       onSuccess: params.onSuccess,
     });
-    uploadTUS.findPreviousUploads().then(function (previousUploads) {
+
+    await uploadTUS.findPreviousUploads().then(function (previousUploads) {
       // Found previous uploads so we select the first one.
       if (previousUploads.length) {
         uploadTUS.resumeFromPreviousUpload(previousUploads[0]);
@@ -103,26 +145,56 @@ export class APIClient {
     });
   }
 
-  private async makeRequest(
+  protected async makeRequest(
     endpoint: string,
     method: APIClient.Methods,
     input?: APIClient.Request
-  ): Promise<APIClient.Response> {
+  ): Promise<APIClient.Response<any>> {
     const url = this.buildURL(endpoint);
-    const options = this.buildOptions(input);
+
+    const commonOptions = {
+      headers: {
+        ...input?.headers,
+        AccessKey: this.accessKey,
+      },
+    };
+
+    let axiosConfig = {};
+
+    // Configurações específicas para GET e DELETE (query parameters)
+    if (method === "GET" || method === "DELETE") {
+      axiosConfig = {
+        ...commonOptions,
+        params: input?.data,
+      };
+    }
+
+    // Configurações específicas para POST e PUT (body)
+    if (method === "POST" || method === "PUT") {
+      axiosConfig = {
+        ...commonOptions,
+        data: input?.data,
+      };
+    }
 
     try {
       const response = await axios.request({
         url,
         method,
-        ...options,
+        ...axiosConfig,
       });
 
       if (response.status >= 400) {
         const errorMessage =
           response.data.title ?? response.data.Message ?? "Request failed";
-        const error = new RequestError(errorMessage, response.status);
-        throw error;
+        return {
+          status: "failure",
+          statusCode: response.status,
+          data: {
+            origin: "bunny.net",
+            error: errorMessage,
+          },
+        };
       }
 
       return {
@@ -131,40 +203,34 @@ export class APIClient {
         data: response.data,
       };
     } catch (error: any) {
-      const status = error.status ?? 400;
-      const errorMessage = error.message ?? "Request failed";
-
+      if (error.response !== undefined) {
+        return {
+          status: "failure",
+          statusCode: error.response.status ?? 500,
+          data: {
+            origin: "bunny.net",
+            ...error.response.data,
+          },
+        };
+      }
       return {
         status: "failure",
-        statusCode: status,
+        statusCode: error.response.status ?? 500,
         data: {
-          error: errorMessage,
+          origin: "bunnyjs sdk",
+          error: error.response.data.message ?? "Request failed",
         },
       };
     }
   }
-  private buildURL(endpoint: string) {
+  protected buildURL(endpoint: string) {
     return `${this.baseUrl}${endpoint}`;
   }
 
-  private buildOptions(input?: APIClient.Request) {
-    const options = {
-      body: input?.body,
-      headers: {
-        ...input?.headers,
-        AccessKey: this.accessKey,
-      },
-    };
-
-    return options;
-  }
-
-  createSignature(input: APIClient.CreateSignatureParams): string {
-    const date = new Date(new Date().getTime() + input.expireTime);
-
-    const stringToSign = `${input.libraryId}${this.accessKey}${date.getTime()}${
-      input.videoId
-    }`;
+  protected createSignature(input: APIClient.CreateSignatureParams): string {
+    const stringToSign = `${input.libraryId}${
+      this.accessKey
+    }${input.expireTime.getTime()}${input.videoId}`;
 
     const signature = createHash("sha256").update(stringToSign).digest("hex");
 
@@ -174,20 +240,34 @@ export class APIClient {
 
 export namespace APIClient {
   export type Params = {
-    baseUrl: string;
-    accessKey: string;
+    baseUrl?: string;
+    accessKey?: string;
   };
 
   export type Request = {
-    body?: any;
+    data?: any;
     headers?: any;
   };
 
-  export type Response = {
-    status: "success" | "failure";
+  type successResponse<T> = {
+    status: "success";
     statusCode: number;
-    data: any;
+    data: T;
   };
+
+  type failureResponse = {
+    status: "failure";
+    statusCode: number;
+    data:
+      | BunnyValidationErrorResponse
+      | DefaultResponse
+      | {
+          origin: string;
+          error: string;
+        };
+  };
+
+  export type Response<T> = successResponse<T> | failureResponse;
 
   export type UploadFileRequest = {
     file: File | Blob | Pick<ReadableStreamDefaultReader<any>, "read">;
@@ -211,6 +291,6 @@ export namespace APIClient {
   export type CreateSignatureParams = {
     libraryId: number;
     videoId: string;
-    expireTime: number;
+    expireTime: Date;
   };
 }
