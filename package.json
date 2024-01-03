@@ -1,5 +1,5 @@
 {
-  "name": "@bunnyjs/stream",
+  "name": "@bunnynet/stream",
   "version": "0.1.0",
   "description": "A simple Bunny Client for javascript",
   "main": "dist/index.js",
@@ -11,7 +11,7 @@
     "test": "jest --passWithNoTests --no-cache --runInBand",
     "test:watch": "npm test -- --watch",
     "test:coverage": "npm t -- --coverage",
-    "publish": "npm run build && npm publish --access public"
+    "publish": "rm -rf dist && npm run build && npm publish --access public"
   },
   "repository": {
     "type": "git",
